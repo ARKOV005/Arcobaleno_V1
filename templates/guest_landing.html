@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <section class="guest-hero">
+        <p class="eyebrow">Connected to ARCOBALENO</p>
+        {% if active_event %}
+            <h1>{{ active_event.title }}</h1>
+            <p class="guest-subtitle">
+                {% if active_event.hosts %}Celebrating {{ active_event.hosts }} · {% endif %}
+                {{ active_event.event_date|pretty_date }}
+            </p>
+            <div class="guest-status">
+                <span class="status-dot" aria-hidden="true"></span>
+                <span>{% if event_control and not event_control.uploads_open %}Photo uploads are paused.{% else %}The event camera is ready.{% endif %}</span>
+            </div>
+            <p class="guest-message">
+                {% if event_control and not event_control.uploads_open %}
+                    {{ event_control.pause_message }}
+                {% else %}
+                    Enter your name once, capture a photo, review it, and send it directly to the event laptop. No app installation is needed.
+                {% endif %}
+            </p>
+            <div class="hero-actions">
+                <a class="button button-primary" href="{{ url_for('camera.camera_page') }}">{% if event_control and not event_control.uploads_open %}View event camera{% else %}Open event camera{% endif %}</a>
+            </div>
+        {% else %}
+            <h1>The event experience is being prepared.</h1>
+            <p class="guest-subtitle">You are connected to the local ARCOBALENO network.</p>
+            <div class="guest-status">
+                <span class="status-dot" aria-hidden="true"></span>
+                <span>Waiting for the operator to start an event.</span>
+            </div>
+        {% endif %}
+    </section>
+{% endblock %}

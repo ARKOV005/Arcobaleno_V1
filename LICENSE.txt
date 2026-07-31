@@ -1,0 +1,15 @@
+ARCOBALENO RELEASE CANDIDATE LICENSE
+
+Copyright (c) 2026 ARCOBALENO. All rights reserved.
+
+This Release Candidate is provided for evaluation, event testing, and internal
+operator use. You may install and operate copies on computers used for your own
+events and demonstrations.
+
+You may not sell, sublicense, redistribute modified builds, reverse engineer,
+or present ARCOBALENO as another product without written permission from the
+copyright holder.
+
+This pre-release software is provided "as is" without warranty. Operators are
+responsible for maintaining event backups and testing network access before a
+live event.

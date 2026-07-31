@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <section class="about-hero">
+        <img src="{{ url_for('static', filename='img/arcobaleno-logo.svg') }}" alt="ARCOBALENO Multimedia" class="about-logo">
+        <p class="eyebrow">Release candidate</p>
+        <h1>Events. Memories. Locally connected.</h1>
+        <p>ARCOBALENO is an offline-first event photo experience built for dependable local networks, guest uploads, and live celebration slideshows.</p>
+    </section>
+
+    <section class="about-grid">
+        <article>
+            <p class="card-label">Version</p>
+            <h2>{{ version }}</h2>
+            <p>This is Release Candidate 2 — Event Production Edition for ARCOBALENO 1.0.</p>
+        </article>
+        <article>
+            <p class="card-label">Operator address</p>
+            <h2>{{ operator_url }}</h2>
+            <p>Private dashboard address on the server laptop.</p>
+        </article>
+        <article>
+            <p class="card-label">Guest network</p>
+            <h2>{{ network_ip }}</h2>
+            <p>Current local address used by guest devices.</p>
+        </article>
+        <article>
+            <p class="card-label">Data location</p>
+            <h2>{{ runtime_mode }}</h2>
+            <p>{{ runtime_root }}</p>
+        </article>
+    </section>
+
+    <section class="about-values">
+        <div><p class="eyebrow">Product principles</p><h2>Built for real events.</h2></div>
+        <div class="check-list">
+            <span>Local-first operation</span>
+            <span>Portable deployment</span>
+            <span>Operator-only controls</span>
+            <span>Persistent event storage</span>
+            <span>Simple guest experience</span>
+            <span>Recovery-ready workflows</span>
+        </div>
+    </section>
+{% endblock %}

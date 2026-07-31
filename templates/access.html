@@ -1,0 +1,295 @@
+{% extends "base.html" %}
+
+{% block content %}
+    {% if notice %}
+        <div class="notice" role="status">
+            <span class="notice-mark" aria-hidden="true">✓</span>
+            <span>{{ notice }}</span>
+        </div>
+    {% endif %}
+
+    <section class="page-heading access-heading">
+        <div class="page-heading-row">
+            <div>
+                <p class="eyebrow">Guests</p>
+                <h1>Help everyone join.</h1>
+                <p>
+                    Set the event Wi-Fi details once, then share the camera QR code or print instruction cards for {{ active_event.title }}.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    {% if network_state.warning %}
+        <section class="warning-panel" role="alert">
+            <div class="warning-mark" aria-hidden="true">!</div>
+            <div>
+                <p class="card-label">Network check required</p>
+                <h2>Verify the event-network address.</h2>
+                <p>{{ network_state.warning }}</p>
+            </div>
+        </section>
+    {% else %}
+        <section class="network-ready-panel" aria-label="Network address ready">
+            <span class="status-dot" aria-hidden="true"></span>
+            <div>
+                <strong>{{ "Reserved event server verified" if network_state.using_reserved_ip else "Event network detected" }}</strong>
+                <span>Guest links use {{ network_url }}.</span>
+            </div>
+        </section>
+    {% endif %}
+
+    <section class="access-layout">
+        <form class="event-form access-form" method="post" action="{{ url_for('access.save_access_settings') }}" novalidate>
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">Step 1</p>
+                    <h2>Wi-Fi QR details</h2>
+                </div>
+                {% if wifi_ready %}
+                    <span class="badge badge-live">Ready</span>
+                {% else %}
+                    <span class="badge">Needs setup</span>
+                {% endif %}
+            </div>
+
+            {% if errors %}
+                <div class="form-summary" role="alert">
+                    <strong>Check the highlighted Wi-Fi details.</strong>
+                    <span>The QR code was not updated.</span>
+                </div>
+            {% endif %}
+
+            <div class="form-grid">
+                <label class="field field-wide">
+                    <span class="field-label">
+                        <span>Wi-Fi network name (SSID)</span>
+                        <b>Required</b>
+                    </span>
+                    <input
+                        type="text"
+                        name="ssid"
+                        value="{{ wifi.ssid }}"
+                        maxlength="32"
+                        autocomplete="off"
+                        aria-invalid="{{ 'true' if errors.get('ssid') else 'false' }}"
+                        aria-describedby="ssid-help{% if errors.get('ssid') %} ssid-error{% endif %}"
+                    >
+                    <small class="field-help" id="ssid-help">Type the exact SSID shown in Omada, including spaces and capital letters.</small>
+                    {% if errors.get('ssid') %}<small class="field-error" id="ssid-error">{{ errors.get('ssid') }}</small>{% endif %}
+                </label>
+
+                <label class="field">
+                    <span class="field-label">
+                        <span>Security</span>
+                        <b>Required</b>
+                    </span>
+                    <select name="security" data-wifi-security aria-invalid="{{ 'true' if errors.get('security') else 'false' }}">
+                        <option value="WPA" {% if wifi.security == 'WPA' %}selected{% endif %}>WPA / WPA2 Personal</option>
+                        <option value="nopass" {% if wifi.security == 'nopass' %}selected{% endif %}>Open network — no password</option>
+                    </select>
+                    {% if errors.get('security') %}<small class="field-error">{{ errors.get('security') }}</small>{% endif %}
+                </label>
+
+                <div class="field" data-password-field>
+                    <span class="field-label">
+                        <label for="wifi-password">Wi-Fi password</label>
+                        <button class="field-action" type="button" data-password-toggle>Show</button>
+                    </span>
+                    <input
+                        id="wifi-password"
+                        type="password"
+                        name="password"
+                        value="{{ wifi.password }}"
+                        maxlength="64"
+                        autocomplete="new-password"
+                        aria-invalid="{{ 'true' if errors.get('password') else 'false' }}"
+                        aria-describedby="password-help{% if errors.get('password') %} password-error{% endif %}"
+                        data-wifi-password
+                    >
+                    <small class="field-help" id="password-help">For WPA/WPA2, use the exact 8–63 character password.</small>
+                    {% if errors.get('password') %}<small class="field-error" id="password-error">{{ errors.get('password') }}</small>{% endif %}
+                </div>
+
+                <label class="checkbox-row field-wide">
+                    <input type="checkbox" name="hidden" value="true" {% if wifi.hidden %}checked{% endif %}>
+                    <span>
+                        <strong>This Wi-Fi network is hidden</strong>
+                        <small>Leave this unchecked unless Omada hides the SSID from the normal Wi-Fi list.</small>
+                    </span>
+                </label>
+            </div>
+
+            <div class="form-actions">
+                <button class="button button-primary" type="submit">Save Wi-Fi details</button>
+            </div>
+        </form>
+
+        <aside class="access-summary">
+            <p class="eyebrow">Current event</p>
+            <h2>{{ active_event.title }}</h2>
+            {% if active_event.hosts %}<p class="access-hosts">{{ active_event.hosts }}</p>{% endif %}
+            <dl class="detail-list compact-details">
+                <div>
+                    <dt>Camera address</dt>
+                    <dd>{{ camera_url }}</dd>
+                </div>
+                <div>
+                    <dt>Slideshow address</dt>
+                    <dd>{{ network_slideshow_url }}</dd>
+                </div>
+                <div>
+                    <dt>Event server</dt>
+                    <dd>{{ network_ip }}</dd>
+                </div>
+                <div>
+                    <dt>Network status</dt>
+                    <dd>{{ "Verified" if network_state.ready else "Not connected" }}</dd>
+                </div>
+                {% if network_state.detected_ip != network_ip %}
+                    <div>
+                        <dt>Detected alternate</dt>
+                        <dd>{{ network_state.detected_ip }}</dd>
+                    </div>
+                {% endif %}
+            </dl>
+            <p class="access-note">QR codes contain only the connection details guests need. Operator controls remain available only on this laptop.</p>
+        </aside>
+    </section>
+
+    <section class="guest-allowance-panel" aria-labelledby="guest-allowance-title">
+        <div class="guest-allowance-copy">
+            <p class="eyebrow">Shot allowance</p>
+            <h2 id="guest-allowance-title">Refresh guest shots without deleting photos.</h2>
+            {% if allowance_summary.unlimited %}
+                <p>Uploads are currently unlimited. A reset is not needed until you set a per-guest limit.</p>
+            {% else %}
+                <p>Each guest device currently receives <strong>{{ allowance_summary.photo_limit }} shots</strong>. Resetting keeps every uploaded photo and gives existing guests their full allowance again.</p>
+            {% endif %}
+        </div>
+        <div class="guest-allowance-actions">
+            <dl class="guest-allowance-metrics">
+                <div>
+                    <dt>Current limit</dt>
+                    <dd>{{ "Unlimited" if allowance_summary.unlimited else allowance_summary.photo_limit ~ " each" }}</dd>
+                </div>
+                <div>
+                    <dt>Guest devices seen</dt>
+                    <dd>{{ allowance_summary.device_count }}</dd>
+                </div>
+                <div>
+                    <dt>Guests exhausted</dt>
+                    <dd>{{ allowance_summary.exhausted_devices }}</dd>
+                </div>
+            </dl>
+            <form
+                method="post"
+                action="{{ url_for('access.reset_guest_allowances') }}"
+                data-confirm="Reset every existing guest device to the full current allowance? Uploaded photos will stay in the event."
+            >
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                <button
+                    class="button button-secondary"
+                    type="submit"
+                    {% if allowance_summary.unlimited or allowance_summary.devices_with_used_allowance == 0 %}disabled{% endif %}
+                >Reset everyone to full allowance</button>
+            </form>
+            <p class="muted-copy">Open guest camera pages update automatically within a few seconds.</p>
+        </div>
+    </section>
+
+    <section class="qr-section">
+        <div class="section-heading qr-section-heading">
+            <div>
+                <p class="eyebrow">Step 2</p>
+                <h2>Preview and download</h2>
+            </div>
+            {% if wifi_ready %}
+                <a class="button button-primary" href="{{ url_for('access.print_access_cards') }}" target="_blank">Open print layout</a>
+            {% else %}
+                <span class="print-disabled">Save valid Wi-Fi details to unlock printing.</span>
+            {% endif %}
+        </div>
+
+        <div class="qr-grid">
+            <article class="qr-card" data-copy-scope>
+                <div class="qr-card-topline">
+                    <span class="qr-step">01</span>
+                    <span class="badge">Wi-Fi</span>
+                </div>
+                <h3>Connect to the event network</h3>
+                {% if wifi_ready %}
+                    <div class="qr-image-frame">
+                        <img src="{{ url_for('access.qr_image', kind='wifi') }}" alt="Wi-Fi QR code for {{ wifi.ssid }}">
+                    </div>
+                    <p class="qr-primary-value">{{ wifi.ssid }}</p>
+                    <p class="qr-secondary-value">{{ "Open network" if wifi.security == "nopass" else "Password protected" }}</p>
+                    <a class="button button-secondary button-small" href="{{ url_for('access.qr_image', kind='wifi', download=1) }}">Download PNG</a>
+                {% else %}
+                    <div class="qr-placeholder">
+                        <span aria-hidden="true">＋</span>
+                        <strong>Wi-Fi QR not ready</strong>
+                        <small>Save the exact network name and password above.</small>
+                    </div>
+                {% endif %}
+            </article>
+
+            <article class="qr-card" data-copy-scope>
+                <div class="qr-card-topline">
+                    <span class="qr-step">02</span>
+                    <span class="badge">Guest camera</span>
+                </div>
+                <h3>Open the camera experience</h3>
+                <div class="qr-image-frame">
+                    <img src="{{ url_for('access.qr_image', kind='camera') }}" alt="QR code for the ARCOBALENO guest camera">
+                </div>
+                <p class="qr-primary-value">Take and send photos</p>
+                <p class="qr-secondary-value qr-address">{{ camera_url }}</p>
+                <div class="qr-actions">
+                    <a class="button button-secondary button-small" href="{{ url_for('access.qr_image', kind='camera', download=1) }}">Download PNG</a>
+                    <button class="button button-secondary button-small" type="button" data-copy="{{ camera_url }}">Copy address</button>
+                </div>
+                <p class="copy-feedback" data-copy-feedback aria-live="polite"></p>
+            </article>
+
+            <article class="qr-card" data-copy-scope>
+                <div class="qr-card-topline">
+                    <span class="qr-step">03</span>
+                    <span class="badge">Slideshow</span>
+                </div>
+                <h3>Open the live event display</h3>
+                <div class="qr-image-frame">
+                    <img src="{{ url_for('access.qr_image', kind='slideshow') }}" alt="QR code for the ARCOBALENO live slideshow">
+                </div>
+                <p class="qr-primary-value">Projector or second display</p>
+                <p class="qr-secondary-value qr-address">{{ network_slideshow_url }}</p>
+                <div class="qr-actions">
+                    <a class="button button-secondary button-small" href="{{ url_for('access.qr_image', kind='slideshow', download=1) }}">Download PNG</a>
+                    <button class="button button-secondary button-small" type="button" data-copy="{{ network_slideshow_url }}">Copy address</button>
+                </div>
+                <p class="copy-feedback" data-copy-feedback aria-live="polite"></p>
+            </article>
+        </div>
+    </section>
+
+    <section class="print-callout">
+        <div>
+            <p class="eyebrow">Print-ready guest instructions</p>
+            <h2>One A4 guest card. Two simple scans.</h2>
+            <p>The print layout includes the welcome wording, event title, Wi-Fi QR, camera QR, and a separate slideshow access page.</p>
+        </div>
+        {% if wifi_ready and network_state.ready %}
+            <a class="button button-primary" href="{{ url_for('access.print_access_cards') }}" target="_blank">Preview and print</a>
+        {% elif not network_state.ready %}
+            <span class="badge">Event server connection required</span>
+        {% else %}
+            <span class="badge">Wi-Fi setup required</span>
+        {% endif %}
+    </section>
+{% endblock %}
+
+{% block scripts %}
+    <script src="{{ url_for('static', filename='js/access.js') }}" defer></script>
+{% endblock %}

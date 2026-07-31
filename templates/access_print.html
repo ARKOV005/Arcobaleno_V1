@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ page_title }} — ARCOBALENO</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/print.css') }}">
+</head>
+<body>
+    <div class="print-toolbar" role="region" aria-label="Print controls">
+        <a href="{{ url_for('access.manage_access') }}">Back to QR setup</a>
+        {% if network_state.warning %}
+            <span class="toolbar-warning">{{ network_state.warning }}</span>
+        {% else %}
+            <span>Print on A4 paper at 100% scale.</span>
+        {% endif %}
+        <button type="button" data-print-page>Print cards</button>
+    </div>
+
+    <main class="print-document">
+        <article class="print-sheet guest-access-sheet">
+            <header class="print-event-header">
+                <p class="print-kicker">WELCOME!</p>
+                <h1>{{ active_event.title }}</h1>
+                {% if active_event.hosts %}<p class="print-hosts">{{ active_event.hosts }}</p>{% endif %}
+                <p class="print-intro">Help us capture more memories from this special day.</p>
+            </header>
+
+            <div class="print-steps">
+                <section class="print-step">
+                    <div class="print-step-number">1</div>
+                    <div class="print-step-copy">
+                        <p class="print-label">CONNECT</p>
+                        <h2>Join the event Wi-Fi</h2>
+                        <p>Open your phone camera and scan this code. Confirm when your phone asks to join.</p>
+                    </div>
+                    <div class="print-qr-wrap">
+                        <img src="{{ url_for('access.qr_image', kind='wifi') }}" alt="Wi-Fi QR code for {{ wifi.ssid }}">
+                    </div>
+                    <p class="print-network-name">{{ wifi.ssid }}</p>
+                </section>
+
+                <div class="print-divider" aria-hidden="true"></div>
+
+                <section class="print-step">
+                    <div class="print-step-number">2</div>
+                    <div class="print-step-copy">
+                        <p class="print-label">CAPTURE</p>
+                        <h2>Open the event camera</h2>
+                        <p>Scan this code, enter your name, take a photo, review it, and send it to the live event album.</p>
+                    </div>
+                    <div class="print-qr-wrap">
+                        <img src="{{ url_for('access.qr_image', kind='camera') }}" alt="QR code for the ARCOBALENO guest camera">
+                    </div>
+                    <p class="print-manual-address">{{ camera_url }}</p>
+                </section>
+            </div>
+
+            <footer class="print-footer">
+                <strong>No app installation needed.</strong>
+                <span>Scan · Smile · Send</span>
+                <small>Powered locally by ARCOBALENO</small>
+            </footer>
+        </article>
+
+        <article class="print-sheet slideshow-access-sheet">
+            <div class="slideshow-card-inner">
+                <p class="print-kicker">LIVE MEMORIES</p>
+                <h1>{{ active_event.title }}</h1>
+                {% if active_event.hosts %}<p class="print-hosts">{{ active_event.hosts }}</p>{% endif %}
+                <p class="slideshow-intro">Open the live slideshow on a projector laptop, television browser, or second display connected to the same event Wi-Fi.</p>
+                <div class="slideshow-qr-frame">
+                    <img src="{{ url_for('access.qr_image', kind='slideshow') }}" alt="QR code for the ARCOBALENO live slideshow">
+                </div>
+                <p class="print-label">SLIDESHOW ADDRESS</p>
+                <p class="slideshow-address">{{ network_slideshow_url }}</p>
+                <div class="slideshow-note">
+                    <strong>Operator tip</strong>
+                    <span>Open the page, press F for fullscreen, and keep the browser running while guests upload.</span>
+                </div>
+            </div>
+        </article>
+    </main>
+
+    <script src="{{ url_for('static', filename='js/print.js') }}" defer></script>
+</body>
+</html>

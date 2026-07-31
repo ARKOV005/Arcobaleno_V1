@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <section class="error-page">
+        <p class="error-code">{{ error_code }}</p>
+        <p class="eyebrow">ARCOBALENO</p>
+        <h1>{{ error_title }}</h1>
+        <p>{{ error_message }}</p>
+        <a class="button button-primary" href="{{ url_for('events.home') }}">Return home</a>
+    </section>
+{% endblock %}

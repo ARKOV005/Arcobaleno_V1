@@ -1,0 +1,218 @@
+{% extends "base.html" %}
+
+{% block content %}
+    {% if notice %}
+        <div class="notice" role="status">
+            <span class="notice-mark" aria-hidden="true">✓</span>
+            <span>{{ notice }}</span>
+        </div>
+    {% endif %}
+
+    {% if active_event and recovery_attention.required %}
+        <section class="startup-recovery-card" aria-labelledby="startup-recovery-title">
+            <div class="startup-recovery-mark" aria-hidden="true">↻</div>
+            <div class="startup-recovery-copy">
+                <p class="eyebrow">Previous event recovered</p>
+                <h1 id="startup-recovery-title">{{ active_event.title }} is still here.</h1>
+                <p>ARCOBALENO detected that the previous server session did not close normally. The event workspace and uploaded photos are safe. Choose whether to continue this event or finish it before creating a new one.</p>
+                <div class="startup-recovery-summary" aria-label="Recovered event summary">
+                    <span><strong>{{ photo_counts.total }}</strong> photos</span>
+                    <span><strong>{{ guest_count }}</strong> guests</span>
+                    <span><strong>{{ photo_counts.pending }}</strong> awaiting review</span>
+                </div>
+            </div>
+            <div class="startup-recovery-actions">
+                <form method="post" action="{{ url_for('events.continue_recovered_event') }}">
+                    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                    <button class="button button-primary" type="submit">Continue event</button>
+                </form>
+                <form method="post" action="{{ url_for('events.archive_recovered_event') }}" data-confirm="Finish '{{ active_event.title }}', move it to completed events, and open a new event form?">
+                    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="confirmation" value="archive-recovered">
+                    <button class="button button-secondary" type="submit">Archive and start new</button>
+                </form>
+                <a class="text-link" href="{{ url_for('events.archive') }}">Review event details →</a>
+            </div>
+        </section>
+    {% endif %}
+
+    {% if active_event and not recovery_attention.required %}
+        <div
+            id="production-dashboard"
+            class="consolidated-dashboard"
+            data-event-id="{{ active_event.id }}"
+            data-snapshot-url="{{ url_for('production.operator_snapshot_api') }}"
+            data-live-url="{{ url_for('production.live_events_api') }}"
+            data-slideshow-control-url="{{ url_for('production.slideshow_control_api') }}"
+            data-wired-url="{{ url_for('slideshow.slideshow_page', display='wired', fullscreen='1') }}"
+            data-network-slideshow-url="{{ url_for('slideshow.slideshow_page', display='network') }}"
+            data-csrf-token="{{ csrf_token() }}"
+        >
+            <section class="command-dashboard-hero">
+                <div class="command-dashboard-copy">
+                    <div class="command-dashboard-kicker">
+                        <span class="live-dot" id="operator-live-dot" aria-hidden="true"></span>
+                        <span id="operator-live-label">Connecting event status…</span>
+                    </div>
+                    <p class="eyebrow">Current event</p>
+                    <div class="command-dashboard-title-row">
+                        <div>
+                            <h1>{{ active_event.title }}</h1>
+                            <p>
+                                {% if active_event.hosts %}{{ active_event.hosts }} · {% endif %}
+                                {{ active_event.event_date|pretty_date }}
+                                {% if active_event.venue %} · {{ active_event.venue }}{% endif %}
+                            </p>
+                        </div>
+                        <span class="badge {% if event_control and event_control.event_mode == 'live' %}badge-live{% else %}badge-setup{% endif %}" id="event-mode-badge">
+                            {% if event_control and event_control.event_mode == 'live' %}● Event live{% else %}Setup{% endif %}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="command-dashboard-actions">
+                    {% if event_control and event_control.event_mode == 'setup' %}
+                        <form method="post" action="{{ url_for('production.update_event_mode') }}">
+                            <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                            <input type="hidden" name="mode" value="live">
+                            <button class="button button-primary" type="submit">Start event</button>
+                        </form>
+                    {% else %}
+                        <a class="button button-primary" href="{{ url_for('events.photo_library') }}">Open Live Console</a>
+                    {% endif %}
+                    <a class="button button-secondary" href="{{ url_for('events.archive') }}">Manage event</a>
+                    <form method="post" action="{{ url_for('events.end_event') }}" data-confirm="Finish '{{ active_event.title }}' and move it to the archive?">
+                        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="confirmation" value="archive">
+                        <button class="button button-quiet-danger" type="submit">Finish event</button>
+                    </form>
+                </div>
+            </section>
+
+            <section class="dashboard-readiness" aria-labelledby="dashboard-readiness-title">
+                <div class="dashboard-compact-heading">
+                    <div>
+                        <p class="eyebrow">Event readiness</p>
+                        <h2 id="dashboard-readiness-title">Everything important, at a glance.</h2>
+                    </div>
+                    <a class="text-link" href="{{ url_for('admin.readiness_page') }}">Run full check →</a>
+                </div>
+
+                <div class="readiness-strip">
+                    <article class="readiness-item {% if preferred_ip and not network_preferred_matches %}is-warning{% else %}is-ready{% endif %}">
+                        <span class="readiness-indicator" aria-hidden="true"></span>
+                        <div>
+                            <span>Event server</span>
+                            <strong>{% if preferred_ip and not network_preferred_matches %}Needs attention{% else %}Ready{% endif %}</strong>
+                            <small>{{ preferred_ip or network_ip }}</small>
+                        </div>
+                    </article>
+                    <article class="readiness-item {% if storage_status.level == 'critical' %}is-danger{% elif event_control and event_control.uploads_open %}is-ready{% else %}is-neutral{% endif %}">
+                        <span class="readiness-indicator" aria-hidden="true"></span>
+                        <div>
+                            <span>Guest camera</span>
+                            <strong>{% if storage_status.level == 'critical' %}Uploads blocked{% elif event_control and event_control.uploads_open %}Accepting uploads{% else %}Uploads paused{% endif %}</strong>
+                            <small><span id="metric-guests">{{ guest_count }}</span> guests identified</small>
+                        </div>
+                    </article>
+                    <article class="readiness-item {% if display_status.total %}is-ready{% else %}is-neutral{% endif %}">
+                        <span class="readiness-indicator" aria-hidden="true"></span>
+                        <div>
+                            <span>Display</span>
+                            <strong id="slideshow-state-pill">{{ event_control.slideshow_state|title if event_control else 'Ready' }}</strong>
+                            <small id="metric-display-detail"><span id="metric-displays">{{ display_status.total }}</span> connected</small>
+                        </div>
+                    </article>
+                    <article class="readiness-item {% if storage_status.level == 'healthy' %}is-ready{% elif storage_status.level == 'warning' %}is-warning{% else %}is-danger{% endif %}">
+                        <span class="readiness-indicator" aria-hidden="true"></span>
+                        <div>
+                            <span>Storage</span>
+                            <strong>{{ storage_status.level|title }}</strong>
+                            <small>{{ storage_status.free_bytes|filesize }} free</small>
+                        </div>
+                    </article>
+                </div>
+            </section>
+
+            <section class="dashboard-attention {% if not (preferred_ip and not network_preferred_matches) and photo_counts.pending == 0 and storage_status.level == 'healthy' and not (event_control and event_control.event_mode == 'live' and display_status.total == 0) %}is-clear{% endif %}" aria-labelledby="attention-title">
+                <div class="attention-heading">
+                    <span class="attention-icon" aria-hidden="true">{% if not (preferred_ip and not network_preferred_matches) and photo_counts.pending == 0 and storage_status.level == 'healthy' and not (event_control and event_control.event_mode == 'live' and display_status.total == 0) %}✓{% else %}!{% endif %}</span>
+                    <div>
+                        <p class="eyebrow">Attention</p>
+                        <h2 id="attention-title">
+                            {% if not (preferred_ip and not network_preferred_matches) and photo_counts.pending == 0 and storage_status.level == 'healthy' and not (event_control and event_control.event_mode == 'live' and display_status.total == 0) %}
+                                No action needed.
+                            {% else %}
+                                A few things need your attention.
+                            {% endif %}
+                        </h2>
+                    </div>
+                </div>
+                <div class="attention-items">
+                    {% if preferred_ip and not network_preferred_matches %}
+                        <a href="{{ url_for('access.manage_access') }}"><strong>Reserved server unavailable</strong><span>Reconnect {{ preferred_ip }} before sharing guest access.</span></a>
+                    {% endif %}
+                    {% if photo_counts.pending > 0 %}
+                        <a href="{{ url_for('events.photo_library') }}"><strong><span id="metric-pending">{{ photo_counts.pending }}</span> photo{% if photo_counts.pending != 1 %}s{% endif %} waiting for review</strong><span>Open Live Console to approve or hide them.</span></a>
+                    {% else %}
+                        <span class="sr-only" id="metric-pending">0</span>
+                    {% endif %}
+                    {% if event_control and event_control.event_mode == 'live' and display_status.total == 0 %}
+                        <a href="{{ url_for('slideshow.display_manager_page') }}"><strong>No display connected</strong><span>Launch the projector display before the program starts.</span></a>
+                    {% endif %}
+                    {% if storage_status.level != 'healthy' %}
+                        <a href="{{ url_for('admin.recovery_page') }}"><strong>Storage {{ storage_status.level }}</strong><span>{{ storage_status.message }}</span></a>
+                    {% endif %}
+                    {% if not (preferred_ip and not network_preferred_matches) and photo_counts.pending == 0 and storage_status.level == 'healthy' and not (event_control and event_control.event_mode == 'live' and display_status.total == 0) %}
+                        <p>ARCOBALENO is ready. You can stay in Live Console once guests begin uploading.</p>
+                    {% endif %}
+                </div>
+            </section>
+
+            <section class="dashboard-destinations" aria-label="Event workspaces">
+                <a class="destination-card destination-card-primary" href="{{ url_for('events.photo_library') }}">
+                    <span class="destination-icon" aria-hidden="true">▦</span>
+                    <span><strong>Live Console</strong><small>Moderate photos and run the event.</small></span>
+                    <b><span id="metric-total">{{ photo_counts.total }}</span> photos</b>
+                </a>
+                <a class="destination-card" href="{{ url_for('access.manage_access') }}">
+                    <span class="destination-icon" aria-hidden="true">⌗</span>
+                    <span><strong>Guests</strong><small>Wi-Fi, QR codes, and upload access.</small></span>
+                    <b>{{ photo_limit if photo_limit else '∞' }} each</b>
+                </a>
+                <a class="destination-card" href="{{ url_for('slideshow.display_manager_page') }}">
+                    <span class="destination-icon" aria-hidden="true">▣</span>
+                    <span><strong>Display</strong><small>Launch and monitor projector outputs.</small></span>
+                    <b>{{ event_control.slideshow_state|title if event_control else 'Ready' }}</b>
+                </a>
+                <a class="destination-card" href="{{ url_for('events.archive') }}">
+                    <span class="destination-icon" aria-hidden="true">◇</span>
+                    <span><strong>Events</strong><small>Details, archives, exports, and Trash.</small></span>
+                    <b>{{ archive_count }} archived</b>
+                </a>
+            </section>
+        </div>
+    {% elif not active_event %}
+        <section class="empty-dashboard-hero consolidated-empty-dashboard">
+            <img src="{{ url_for('static', filename='img/arcobaleno-mark.svg') }}" alt="" aria-hidden="true">
+            <p class="eyebrow">Dashboard</p>
+            <h1>Ready for your <em>next event.</em></h1>
+            <p class="hero-copy">Create a workspace, check guest access and the projector, then move into Live Console when the room is ready.</p>
+            <div class="hero-actions">
+                <a class="button button-primary" href="{{ url_for('events.new_event') }}">Create event</a>
+                <a class="button button-secondary" href="{{ url_for('events.archive') }}">Events{% if archive_count %} ({{ archive_count }}){% endif %}</a>
+            </div>
+        </section>
+
+        <section class="empty-dashboard-status" aria-label="Application status">
+            <div><span class="status-dot" aria-hidden="true"></span><strong>ARCOBALENO ready</strong><small>Server running locally</small></div>
+            <div><strong>{{ network_ip }}</strong><small>Event server address</small></div>
+            <div><strong>{{ archive_count }}</strong><small>Archived events</small></div>
+            <a href="{{ url_for('admin.settings_page') }}"><strong>Settings</strong><small>Network, limits, and behavior</small></a>
+        </section>
+    {% endif %}
+{% endblock %}
+
+{% block scripts %}
+    {% if active_event and not recovery_attention.required %}<script src="{{ url_for('static', filename='js/production-dashboard.js') }}" defer></script>{% endif %}
+{% endblock %}

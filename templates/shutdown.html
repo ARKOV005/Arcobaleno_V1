@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <section class="shutdown-screen" id="shutdown-screen">
+        <div class="shutdown-orbit" aria-hidden="true"><span></span></div>
+        <p class="eyebrow">Safe shutdown</p>
+        <h1>ARCOBALENO is closing safely.</h1>
+        {% if active_event %}
+            <p><strong>{{ active_event.title }}</strong> remains active. Its photos and event workspace are untouched and will be available the next time ARCOBALENO starts.</p>
+        {% else %}
+            <p>No event data is being deleted or archived. ARCOBALENO is finishing the current server session and saving its clean-shutdown state.</p>
+        {% endif %}
+        <div class="shutdown-status" role="status" aria-live="polite">
+            <span class="status-dot" aria-hidden="true"></span>
+            <strong id="shutdown-status-label">Finishing server requests…</strong>
+            <small id="shutdown-status-detail">Keep this page open for a moment.</small>
+        </div>
+        <p class="shutdown-footnote">You may close this browser tab once the terminal window closes.</p>
+    </section>
+{% endblock %}
+
+{% block scripts %}
+    <script src="{{ url_for('static', filename='js/shutdown.js') }}" defer></script>
+{% endblock %}

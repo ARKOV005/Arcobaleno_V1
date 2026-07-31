@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#2b2725">
+    <title>{{ page_title }} — {{ app_name }}</title>
+    <link rel="icon" href="{{ url_for('static', filename='img/favicon.svg') }}" type="image/svg+xml">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/camera.css') }}">
+</head>
+<body class="theme-{{ active_event.theme or 'default' }}">
+    <main
+        class="camera-app"
+        data-theme="{{ active_event.theme or 'default' }}"
+        id="camera-app"
+        data-event-id="{{ active_event.id }}"
+        data-status-url="{{ url_for('camera.camera_status_api') }}"
+        data-upload-url="{{ url_for('camera.upload_photo_api') }}"
+        data-csrf-token="{{ csrf_token() }}"
+        data-initial-remaining="{% if camera_status.unlimited %}unlimited{% else %}{{ camera_status.remaining }}{% endif %}"
+        data-initial-uploads-open="{{ 'true' if camera_status.uploads_open else 'false' }}"
+        data-initial-pause-message="{{ camera_status.pause_message }}"
+        data-initial-storage-open="{{ 'true' if camera_status.storage_accepting_uploads else 'false' }}"
+        data-initial-storage-message="{{ camera_status.storage_message }}"
+    >
+        <header class="camera-topbar">
+            <button class="identity-button" id="identity-button" type="button" aria-label="Edit guest name">
+                <span class="identity-copy">
+                    <span class="identity-label">Guest</span>
+                    <strong id="guest-name-display">Enter your name</strong>
+                </span>
+                <span class="identity-chevron" aria-hidden="true">›</span>
+            </button>
+
+            <div class="remaining-pill" id="remaining-pill" aria-live="polite" aria-label="Photos remaining">
+                <strong id="remaining-count">{% if camera_status.unlimited %}∞{% else %}{{ camera_status.remaining }}{% endif %}</strong>
+                <span id="remaining-label">{% if camera_status.unlimited %}unlimited shots{% else %}shots left{% endif %}</span>
+            </div>
+        </header>
+
+        <section class="camera-card" aria-label="Guest camera">
+            <div class="camera-stage" id="camera-stage">
+                <video id="camera-video" playsinline muted aria-label="Live camera preview"></video>
+                <img id="photo-preview" alt="Photo preview">
+
+                <div class="camera-placeholder" id="camera-placeholder">
+                    <span class="camera-glyph" aria-hidden="true"></span>
+                    <strong>Capture a memory</strong>
+                    <span id="camera-mode-message">Tap Open Camera to begin.</span>
+                </div>
+
+                <div class="event-overlay">
+                    <span class="event-brand"><img src="{{ url_for('static', filename='img/arcobaleno-mark.svg') }}" alt="" aria-hidden="true">ARCOBALENO</span>
+                    <strong>{{ active_event.title }}</strong>
+                </div>
+
+                <button class="switch-camera" id="switch-camera" type="button" hidden aria-label="Flip camera" title="Flip camera">
+                    <span aria-hidden="true">↻</span>
+                </button>
+
+                <div class="stage-feedback" id="stage-feedback" hidden aria-live="polite" aria-atomic="true">
+                    <div class="stage-feedback-inner">
+                        <span class="stage-feedback-icon" id="stage-feedback-icon" aria-hidden="true"></span>
+                        <strong id="stage-feedback-title">Preparing camera</strong>
+                        <span id="stage-feedback-subtitle">Please wait a moment.</span>
+                        <div class="stage-feedback-progress" id="stage-feedback-progress" hidden>
+                            <span id="stage-feedback-progress-bar"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="camera-actions" id="camera-actions">
+                <input id="camera-input" type="file" accept="image/*" capture="environment" hidden>
+                <button class="secondary-action" id="retake-button" type="button" hidden>Retake</button>
+                <button class="primary-action" id="primary-action" type="button">Open Camera</button>
+            </div>
+
+            <p class="camera-status" id="camera-status" aria-live="polite">
+                Photos are saved directly to the event server and monitored by the event operator.
+            </p>
+            <p class="camera-safety-line"><span aria-hidden="true">⚠</span> Keep uploads celebration-friendly. Unsafe or offensive photos may be hidden or removed.</p>
+        </section>
+
+        <details class="guest-timeline" id="guest-timeline" {% if not camera_status.timeline %}hidden{% endif %}>
+            <summary>
+                <span><strong>Today’s event timeline</strong><small>See what is coming up next.</small></span>
+                <span aria-hidden="true">⌄</span>
+            </summary>
+            <div class="guest-timeline-list" id="guest-timeline-list">
+                {% for entry in camera_status.timeline %}
+                    <article class="guest-timeline-entry">
+                        <time>{{ entry.scheduled_time or 'Soon' }}</time>
+                        <div><strong>{{ entry.title }}</strong>{% if entry.detail %}<span>{{ entry.detail }}</span>{% endif %}</div>
+                    </article>
+                {% endfor %}
+            </div>
+        </details>
+
+        <footer class="camera-footer">
+            <span>{{ active_event.event_date|pretty_date }}</span>
+            {% if active_event.venue %}<span>{{ active_event.venue }}</span>{% endif %}
+        </footer>
+
+        <canvas id="capture-canvas" hidden></canvas>
+    </main>
+
+    <div class="name-gate" id="name-gate" role="dialog" aria-modal="true" aria-labelledby="name-title" hidden>
+        <form class="name-card" id="name-form">
+            <p class="name-kicker">Welcome to</p>
+            <h1 id="name-title">{{ active_event.title }}</h1>
+            <p>Tell us who is sharing this memory. You can edit your name anytime.</p>
+            <label for="guest-name-input">Your name</label>
+            <input id="guest-name-input" name="guest_name" type="text" maxlength="80" autocomplete="name" placeholder="Enter your name" required>
+            <label class="guest-conduct-check">
+                <input id="guest-conduct-agreement" type="checkbox" required>
+                <span><strong>Keep it respectful.</strong> Do not upload nudity, harassment, or offensive images. Uploads are monitored and may be removed.</span>
+            </label>
+            <p class="name-error" id="name-error" aria-live="polite"></p>
+            <button type="submit">I Understand — Continue</button>
+        </form>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/camera.js') }}" defer></script>
+</body>
+</html>

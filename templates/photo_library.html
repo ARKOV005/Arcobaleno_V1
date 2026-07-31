@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div
+        id="photo-manager"
+        data-event-id="{{ active_event.id }}"
+        data-list-url="{{ url_for('production.operator_photos_api') }}"
+        data-live-url="{{ url_for('production.live_events_api') }}"
+        data-snapshot-url="{{ url_for('production.operator_snapshot_api') }}"
+        data-slideshow-control-url="{{ url_for('production.slideshow_control_api') }}"
+        data-photo-limit-url="{{ url_for('production.photo_limit_api') }}"
+        data-csrf-token="{{ csrf_token() }}"
+        data-around="{{ around }}"
+        data-initial-slideshow-state="{{ event_control.slideshow_state or 'playing' }}"
+        data-initial-photo-limit="{{ photo_limit }}"
+    >
+        {% if request.args.get('notice') == 'deleted' %}
+            <div class="notice" role="status"><span class="notice-mark" aria-hidden="true">✓</span><span>Photo removed from the active event.</span></div>
+        {% endif %}
+
+        <section class="event-console-shell" aria-labelledby="event-console-title">
+            <div class="event-console-topline">
+                <div class="event-console-title-group">
+                    <div class="event-console-kicker">
+                        <span class="event-console-live-badge"><span class="live-dot" id="photo-live-dot" aria-hidden="true"></span> Live</span>
+                        <span>Live Photo Console</span>
+                    </div>
+                    <h1 id="event-console-title">{{ active_event.title }}</h1>
+                    <p id="photo-live-detail">Connecting to the event feed…</p>
+                </div>
+                <div class="event-console-flow" id="event-console-flow" data-state="automatic" aria-live="polite">
+                    <span class="event-console-flow-dot" aria-hidden="true"></span>
+                    <div><strong id="event-flow-label">Hands-free active</strong><small id="event-flow-detail">Feed live · slideshow playing</small></div>
+                </div>
+            </div>
+
+            <div class="event-console-deck">
+                <section class="event-console-instruments" aria-label="Live event status">
+                    <p class="event-console-section-label">Event activity</p>
+                    <div class="event-console-stats">
+                        <div class="console-stat console-stat-primary"><strong id="pm-total">{{ photo_counts.total }}</strong><span>Photos</span></div>
+                        <div class="console-stat console-stat-primary"><strong id="pm-guests">{{ guest_count }}</strong><span>Guests</span></div>
+                        <div class="console-stat console-stat-review"><strong id="pm-pending">{{ photo_counts.pending }}</strong><span>Review</span></div>
+                        <div class="console-stat console-stat-hidden"><strong id="pm-hidden">{{ photo_counts.hidden }}</strong><span>Hidden</span></div>
+                    </div>
+                    <div class="event-console-status-strip">
+                        <div><span>Guest limit</span><strong id="pm-limit-label">{% if photo_limit == 0 %}Unlimited{% else %}{{ photo_limit }} each{% endif %}</strong></div>
+                        <div><span>Slideshow</span><strong id="pm-slideshow-state">{{ event_control.slideshow_state|default('playing')|replace('_', ' ')|title }}</strong></div>
+                    </div>
+                </section>
+
+                <section class="event-console-command-area" aria-label="Event controls">
+                    <p class="event-console-section-label">Quick controls</p>
+                    <div class="event-console-actions">
+                        <button class="console-action" id="feed-freeze-button" type="button" data-state="live">
+                            <span class="console-action-icon" aria-hidden="true">Ⅱ</span>
+                            <span><strong id="feed-freeze-label">Freeze feed</strong><small>Uploads continue</small></span>
+                        </button>
+                        <button class="console-action" id="slideshow-toggle-button" type="button">
+                            <span class="console-action-icon" aria-hidden="true">Ⅱ</span>
+                            <span><strong id="slideshow-toggle-label">Pause slideshow</strong><small id="slideshow-toggle-detail">Keep current photo</small></span>
+                        </button>
+                        <button class="console-action" id="hold-screen-button" type="button">
+                            <span class="console-action-icon" aria-hidden="true">▰</span>
+                            <span><strong>Hold screen</strong><small>Event-branded pause</small></span>
+                        </button>
+                        <button class="console-action console-action-next" type="button" data-slideshow-command="next">
+                            <span class="console-action-icon" aria-hidden="true">→</span>
+                            <span><strong>Next photo</strong><small>Advance display</small></span>
+                        </button>
+                        <button class="console-action console-action-emergency" id="emergency-screen-button" type="button">
+                            <span class="console-action-icon" aria-hidden="true">!</span>
+                            <span><strong>Emergency</strong><small>Safe screen now</small></span>
+                        </button>
+
+                        <details class="console-more" id="console-more">
+                            <summary class="console-action console-action-more">
+                                <span class="console-action-icon" aria-hidden="true">•••</span>
+                                <span><strong>More</strong><small>Limits and tools</small></span>
+                            </summary>
+                            <div class="console-more-panel">
+                                <section>
+                                    <p class="card-label">Slideshow navigation</p>
+                                    <div class="console-inline-actions">
+                                        <button class="button button-secondary button-small" type="button" data-slideshow-command="previous">Previous</button>
+                                        <button class="button button-secondary button-small" type="button" data-slideshow-command="restart">Restart</button>
+                                    </div>
+                                </section>
+                                <section>
+                                    <p class="card-label">Maximum photos per guest device</p>
+                                    <form class="photo-limit-form" id="photo-limit-form">
+                                        <label for="photo-limit-input">Use 0 for unlimited</label>
+                                        <div>
+                                            <input id="photo-limit-input" name="photo_limit" type="number" min="0" max="1000" step="1" value="{{ photo_limit }}" inputmode="numeric">
+                                            <button class="button button-primary button-small" type="submit">Save limit</button>
+                                        </div>
+                                        <p id="photo-limit-help">Changes apply immediately. Existing uploads still count.</p>
+                                    </form>
+                                </section>
+                                <nav class="console-more-links" aria-label="Secondary event tools">
+                                    <a href="{{ url_for('events.export_event') }}">Export event ZIP</a>
+                                    <a href="{{ url_for('admin.settings_page') }}">Application settings</a>
+                                </nav>
+                            </div>
+                        </details>
+                    </div>
+                </section>
+            </div>
+        </section>
+
+        {% if timeline_label %}
+            <div class="timeline-filter-chip">Showing photos near <strong>{{ timeline_label }}</strong> · approximately 15 minutes before and after</div>
+        {% endif %}
+
+        <section class="feed-freeze-panel" id="feed-freeze-panel" hidden aria-live="polite">
+            <div>
+                <p class="eyebrow">Feed frozen</p>
+                <h2 id="feed-queue-count">0 photos waiting</h2>
+                <p>Guests can continue uploading. Choose how quickly new thumbnails return to this screen.</p>
+            </div>
+            <div class="feed-freeze-actions">
+                <button class="button button-secondary" id="release-next-photo" type="button">Show next</button>
+                <button class="button button-secondary" id="release-five-photos" type="button">Show 5</button>
+                <button class="button button-primary" id="resume-feed-button" type="button">Resume and show all</button>
+            </div>
+        </section>
+
+        <section class="photo-manager-toolbar" aria-label="Photo filters">
+            <div class="segmented-filter" id="photo-filter">
+                <button type="button" class="is-active" data-filter="all">All</button>
+                <button type="button" data-filter="approved">Ready</button>
+                <button type="button" data-filter="pending">Review</button>
+                <button type="button" data-filter="hidden">Hidden</button>
+                <button type="button" data-filter="favorites">Favorites <span id="pm-favorites">{{ photo_counts.favorites }}</span></button>
+            </div>
+            <label class="photo-search">
+                <span class="sr-only">Search guest names</span>
+                <input id="photo-search-input" type="search" placeholder="Search guest name…" autocomplete="off">
+            </label>
+            {% if around %}<a class="text-link" href="{{ url_for('events.photo_library') }}">Clear time filter</a>{% endif %}
+        </section>
+
+        <button class="new-photo-banner" id="new-photo-banner" type="button" hidden>
+            <strong id="new-photo-count">0 photos waiting</strong>
+            <span>Review waiting photos ↑</span>
+        </button>
+
+        <section class="photo-grid live-photo-grid" id="live-photo-grid" aria-label="Uploaded photos" aria-live="polite"></section>
+
+        <section class="empty-state" id="photo-manager-empty" hidden>
+            <span class="empty-number">00</span>
+            <h2>No photos match this view.</h2>
+            <p>New uploads will appear automatically unless the operator freezes the feed.</p>
+        </section>
+
+        <div class="photo-manager-load-row">
+            <button class="button button-secondary" id="load-older-photos" type="button" hidden>Load older photos</button>
+            <p id="photo-manager-limit-note" hidden>For stable event-day performance, the console keeps at most 300 thumbnails active at once.</p>
+        </div>
+
+        <dialog class="photo-lightbox" id="photo-lightbox">
+            <div class="photo-lightbox-shell">
+                <button class="photo-lightbox-close" id="photo-lightbox-close" type="button" aria-label="Close photo">×</button>
+                <img id="photo-lightbox-image" alt="Selected event photo">
+                <div class="photo-lightbox-meta">
+                    <div><p class="card-label">Uploaded by</p><h2 id="photo-lightbox-name">Guest</h2><p id="photo-lightbox-time"></p></div>
+                    <div class="photo-lightbox-actions" id="photo-lightbox-actions"></div>
+                </div>
+            </div>
+        </dialog>
+    </div>
+{% endblock %}
+
+{% block scripts %}<script src="{{ url_for('static', filename='js/photo-manager.js') }}" defer></script>{% endblock %}

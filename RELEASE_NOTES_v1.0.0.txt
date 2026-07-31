@@ -1,0 +1,34 @@
+ARCOBALENO 1.0.0
+Official Stable Release — July 31, 2026
+
+ARCOBALENO is a portable event photo experience that lets guests join the
+event network, open a camera-style web app, submit photos, and see approved
+content through the live operator console and slideshow.
+
+STABLE RELEASE HIGHLIGHTS
+- Camera-style guest experience with a server-controlled shot allowance.
+- Persistent guest identity across normal refreshes, tabs, QR rescans, and
+  browser restarts.
+- Guest allowance reset controls and an accurate Guests exhausted metric.
+- Resilient upload handling for unstable event Wi-Fi.
+- Atomic photo storage and upload-integrity protection.
+- Live photo rendering and automatic synchronization recovery.
+- Automatic checkpoints, manual backups, event recovery, and safe shutdown.
+- Storage readiness monitoring, low-space warnings, and protected upload
+  blocking before the server drive is exhausted.
+- Event archive management, photo exports, QR access cards, and slideshow
+  display management.
+- Cleaner operator-facing status messages and terminal wording.
+
+RELEASE STATUS
+This package is promoted from the fully tested RC4 Preview 6A baseline. The
+release changes version metadata, operator documentation, and package cleanup.
+No additional feature behavior was introduced after acceptance testing.
+
+INSTALLATION
+Extract the complete ARCOBALENO_v1.0.0 folder, then double-click
+START_ARCOBALENO.bat. Do not run the application from inside the ZIP file.
+
+DATA NOTE
+This official package starts with clean event, backup, export, and log folders.
+A separate stable-baseline archive preserves the accepted pre-release state.

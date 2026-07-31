@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block content %}
+    {% if notice == "backup-created" %}
+        <div class="notice" role="status">
+            <span class="notice-mark" aria-hidden="true">✓</span>
+            <span>Manual recovery snapshot created.</span>
+        </div>
+    {% elif notice == "no-event" %}
+        <div class="warning-panel warning-panel-compact" role="status">
+            <div class="warning-mark" aria-hidden="true">!</div>
+            <div><h2>No active event to back up.</h2><p>Create or activate an event before making a recovery snapshot.</p></div>
+        </div>
+    {% endif %}
+
+    <section class="page-heading page-heading-row">
+        <div>
+            <p class="eyebrow">Recovery and diagnostics</p>
+            <h1>Know the system is safe.</h1>
+            <p>Check storage health, create a manual event snapshot, and download the application log for troubleshooting.</p>
+        </div>
+        {% if diagnostics.log_available %}
+            <div class="hero-actions">
+                <a class="button button-secondary" href="{{ url_for('admin.download_log') }}">Download log</a>
+            </div>
+        {% endif %}
+    </section>
+
+    <section class="status-grid" aria-label="Recovery status">
+        <article class="status-card storage-status-card storage-{{ global_storage_status.level }}">
+            <span class="card-number">01</span>
+            <div>
+                <p class="card-label">Free storage</p>
+                <h2>{{ diagnostics.disk_free_gb }} GB</h2>
+                <p>
+                    {% if global_storage_status.level == 'critical' %}
+                        Uploads are blocked until space is freed.
+                    {% elif global_storage_status.level == 'warning' %}
+                        Storage is running low; free space before a large event.
+                    {% else %}
+                        {{ diagnostics.disk_used_percent }}% of the drive is currently used.
+                    {% endif %}
+                </p>
+            </div>
+        </article>
+        <article class="status-card">
+            <span class="card-number">02</span>
+            <div><p class="card-label">Current photo files</p><h2>{{ diagnostics.active_photo_files }}</h2><p>{{ diagnostics.active_photo_bytes|filesize }} in the active workspace.</p></div>
+        </article>
+        <article class="status-card">
+            <span class="card-number">03</span>
+            <div><p class="card-label">Auto checkpoints</p><h2>{{ diagnostics.automatic_checkpoint_count }}</h2><p>{% if diagnostics.latest_automatic_checkpoint %}Latest: {{ diagnostics.latest_automatic_checkpoint.created_label }}{% else %}Created automatically as the event changes.{% endif %}</p></div>
+        </article>
+        <article class="status-card">
+            <span class="card-number">04</span>
+            <div><p class="card-label">Full snapshots</p><h2>{{ diagnostics.backup_count }}</h2><p>Manual ZIP copies that include uploaded originals.</p></div>
+        </article>
+    </section>
+
+    <section class="workspace-panel recovery-panel">
+        <div>
+            <p class="eyebrow">Automatic protection</p>
+            <h2>Event metadata checkpoints are active.</h2>
+            <p class="section-copy">ARCOBALENO keeps up to 12 rolling copies of the active event record, photo index, guest-access settings, display controls, and timeline. These checkpoints are small and do not duplicate full-resolution photos.</p>
+            {% if diagnostics.latest_automatic_checkpoint %}
+                <p><strong>Latest checkpoint:</strong> {{ diagnostics.latest_automatic_checkpoint.created_label }} · {{ diagnostics.latest_automatic_checkpoint.reason|replace('-', ' ') }}</p>
+            {% elif active_event %}
+                <p class="muted-copy">The first checkpoint will appear after the next event change.</p>
+            {% else %}
+                <p class="muted-copy">Automatic checkpoints begin when an event is active.</p>
+            {% endif %}
+        </div>
+        <div>
+            <p class="eyebrow">Manual snapshot</p>
+            <h2>Back up before a major change.</h2>
+            <p class="section-copy">A snapshot contains the active event details, photo manifest, access settings, and all uploaded originals. It does not stop the live event.</p>
+            {% if active_event %}
+                <p><strong>Current event:</strong> {{ active_event.title }}</p>
+                <form method="post" action="{{ url_for('admin.create_backup') }}">
+                    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                    <button class="button button-primary" type="submit">Create recovery snapshot</button>
+                </form>
+            {% else %}
+                <p class="muted-copy">There is no active event workspace to snapshot.</p>
+            {% endif %}
+        </div>
+    </section>
+
+    <section class="archive-section">
+        <div class="section-heading">
+            <div><p class="eyebrow">Saved recovery snapshots</p><h2>Manual backups</h2></div>
+        </div>
+        {% if backups %}
+            <div class="archive-list">
+                {% for backup in backups %}
+                    <article class="archive-card">
+                        <div class="archive-card-main">
+                            <p class="card-label">Recovery ZIP</p>
+                            <h2>{{ backup.filename }}</h2>
+                            <p>{{ backup.created_at }} · {{ backup.size_bytes|filesize }}</p>
+                        </div>
+                        <a class="button button-secondary" href="{{ url_for('admin.download_backup', filename=backup.filename) }}">Download</a>
+                    </article>
+                {% endfor %}
+            </div>
+        {% else %}
+            <section class="empty-state compact-empty"><h2>No manual snapshots yet.</h2><p>Create one before changing network settings or testing a major new release.</p></section>
+        {% endif %}
+    </section>
+{% endblock %}

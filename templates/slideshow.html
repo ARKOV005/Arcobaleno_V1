@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#171413">
+    <title>{{ page_title }} — {{ app_name }}</title>
+    <link rel="icon" href="{{ url_for('static', filename='img/favicon.svg') }}" type="image/svg+xml">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/slideshow.css') }}">
+</head>
+<body class="theme-{{ active_event.theme or 'default' }}">
+    <main
+        class="slideshow-app"
+        data-theme="{{ active_event.theme or 'default' }}"
+        id="slideshow-app"
+        data-event-id="{{ active_event.id }}"
+        data-feed-url="{{ url_for('slideshow.slideshow_feed_api') }}"
+        data-heartbeat-url="{{ url_for('production.display_heartbeat_api') }}"
+        data-dashboard-url="{{ url_for('events.home') }}"
+        data-seconds-per-photo="{{ slideshow_settings.seconds_per_photo }}"
+        data-poll-seconds="{{ slideshow_settings.poll_interval_seconds }}"
+        data-show-guest-name="{{ 'true' if slideshow_settings.show_guest_name else 'false' }}"
+        data-show-timestamp="{{ 'true' if slideshow_settings.show_timestamp else 'false' }}"
+        data-display-mode="{{ display_mode }}"
+        data-request-fullscreen="{{ 'true' if request_fullscreen else 'false' }}"
+        data-csrf-token="{{ csrf_token() }}"
+    >
+        <div class="slideshow-viewport" aria-live="polite">
+            <article class="slide-frame slide-frame-a" data-slide-frame aria-hidden="true">
+                <img class="slide-background" data-slide-background alt="">
+                <img class="slide-photo" data-slide-photo alt="">
+            </article>
+            <article class="slide-frame slide-frame-b" data-slide-frame aria-hidden="true">
+                <img class="slide-background" data-slide-background alt="">
+                <img class="slide-photo" data-slide-photo alt="">
+            </article>
+
+            <div class="slideshow-vignette" aria-hidden="true"></div>
+
+            <section class="waiting-screen" id="waiting-screen">
+                <img class="waiting-logo-mark" src="{{ url_for('static', filename='img/arcobaleno-mark.svg') }}" alt="" aria-hidden="true">
+                <p class="waiting-kicker">Live event slideshow</p>
+                <h1>{{ active_event.title }}</h1>
+                <p class="waiting-copy" id="waiting-copy">
+                    {% if photo_count %}Preparing {{ photo_count }} {% if photo_count == 1 %}memory{% else %}memories{% endif %}…{% else %}Photos will appear here as guests share them.{% endif %}
+                </p>
+                <div class="waiting-rule" aria-hidden="true"></div>
+                <p class="waiting-event-line">
+                    {% if active_event.hosts %}{{ active_event.hosts }} · {% endif %}
+                    {{ active_event.event_date|pretty_date }}
+                    {% if active_event.venue %} · {{ active_event.venue }}{% endif %}
+                </p>
+            </section>
+
+            <section class="production-screen production-logo-screen" id="production-logo-screen" hidden>
+                <img src="{{ url_for('static', filename='img/arcobaleno-logo.svg') }}" alt="ARCOBALENO Multimedia">
+                <p>{{ active_event.title }}</p>
+                <span id="production-logo-message">Waiting for the next moment…</span>
+            </section>
+
+            <section class="production-screen production-black-screen" id="production-black-screen" hidden aria-label="Event hold screen">
+                <div class="hold-screen-copy">
+                    <p class="hold-screen-kicker">{{ active_event.hosts or 'A special celebration' }}</p>
+                    <h1>{{ active_event.title }}</h1>
+                    <p id="hold-screen-message">Please enjoy this special moment.</p>
+                </div>
+                <div class="hold-screen-brand" aria-label="Powered by ARCOBALENO Multimedia">
+                    <img src="{{ url_for('static', filename='img/arcobaleno-logo.svg') }}" alt="ARCOBALENO Multimedia">
+                </div>
+            </section>
+
+            <section class="production-screen production-emergency-screen" id="production-emergency-screen" hidden>
+                <img src="{{ url_for('static', filename='img/arcobaleno-mark.svg') }}" alt="" aria-hidden="true">
+                <p class="waiting-kicker">ARCOBALENO</p>
+                <h1 id="emergency-title">We’ll be right back</h1>
+                <p id="emergency-message">Preparing your memories…</p>
+            </section>
+
+            <section class="production-screen production-timeline-screen" id="production-timeline-screen" hidden>
+                <div class="timeline-screen-heading">
+                    <img src="{{ url_for('static', filename='img/arcobaleno-mark.svg') }}" alt="" aria-hidden="true">
+                    <div><p class="waiting-kicker">Today’s celebration</p><h1>{{ active_event.title }}</h1></div>
+                </div>
+                <div class="timeline-screen-list" id="timeline-screen-list"></div>
+            </section>
+
+            <section class="production-screen production-marker-screen" id="production-marker-screen" hidden>
+                <img src="{{ url_for('static', filename='img/arcobaleno-mark.svg') }}" alt="" aria-hidden="true">
+                <p class="waiting-kicker" id="marker-time">Up next</p>
+                <h1 id="marker-title">A special moment</h1>
+                <p id="marker-detail"></p>
+            </section>
+
+            <header class="slideshow-header">
+                <div class="event-signature">
+                    <img class="mini-logo-mark" src="{{ url_for('static', filename='img/arcobaleno-mark.svg') }}" alt="" aria-hidden="true">
+                    <div><span>ARCOBALENO</span><strong>{{ active_event.title }}</strong></div>
+                </div>
+                <div class="connection-pill" id="connection-pill" data-state="connecting">
+                    <span class="connection-dot" aria-hidden="true"></span>
+                    <span id="connection-label">Connecting</span>
+                </div>
+            </header>
+
+            <section class="photo-caption" id="photo-caption" hidden>
+                <div class="caption-copy">
+                    <p class="caption-kicker">Shared by</p>
+                    <h2 id="caption-name">Guest</h2>
+                    <p id="caption-time"></p>
+                </div>
+                <div class="slide-position" aria-live="polite"><strong id="position-current">1</strong><span aria-hidden="true">/</span><span id="position-total">{{ photo_count }}</span></div>
+            </section>
+
+            <div class="slideshow-toast" id="slideshow-toast" role="status" aria-live="polite" hidden></div>
+
+            <section class="fullscreen-gate" id="fullscreen-gate" {% if not request_fullscreen %}hidden{% endif %}>
+                <div>
+                    <img src="{{ url_for('static', filename='img/arcobaleno-mark.svg') }}" alt="" aria-hidden="true">
+                    <p class="waiting-kicker">Wired production display</p>
+                    <h1>Start fullscreen slideshow</h1>
+                    <p>The window is positioned for the projector. Click once to hide the browser interface.</p>
+                    <button id="start-fullscreen-display" type="button">Start Fullscreen Display</button>
+                </div>
+            </section>
+        </div>
+
+        <nav class="slideshow-controls" id="slideshow-controls" aria-label="Local slideshow controls">
+            <a class="control-button control-exit" href="{{ url_for('events.home') }}" aria-label="Return to dashboard" title="Return to dashboard"><span aria-hidden="true">×</span></a>
+            <button class="control-button" id="previous-button" type="button" aria-label="Previous photo" title="Previous photo"><span aria-hidden="true">‹</span></button>
+            <button class="control-button control-primary" id="play-button" type="button" aria-label="Pause slideshow" title="Pause slideshow"><span id="play-icon" aria-hidden="true">Ⅱ</span></button>
+            <button class="control-button" id="next-button" type="button" aria-label="Next photo" title="Next photo"><span aria-hidden="true">›</span></button>
+            <button class="control-button" id="info-button" type="button" aria-label="Hide photo details" title="Hide photo details"><span aria-hidden="true">i</span></button>
+            <button class="control-button" id="fullscreen-button" type="button" aria-label="Enter fullscreen" title="Enter fullscreen"><span aria-hidden="true">⛶</span></button>
+        </nav>
+
+        <p class="keyboard-hint" id="keyboard-hint">Space: local pause · Arrow keys: navigate · F: fullscreen</p>
+    </main>
+
+    <script src="{{ url_for('static', filename='js/slideshow.js') }}" defer></script>
+</body>
+</html>

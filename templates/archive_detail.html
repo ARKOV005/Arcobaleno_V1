@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <section class="page-heading page-heading-row">
+        <div>
+            <p class="eyebrow">Archived event</p>
+            <h1>{{ archived_event.title }}</h1>
+            <p>
+                {% if archived_event.hosts %}{{ archived_event.hosts }} · {% endif %}
+                {{ archived_event.event_date|pretty_date }}
+                {% if archived_event.venue %} · {{ archived_event.venue }}{% endif %}
+            </p>
+        </div>
+        <div class="hero-actions">
+            <a class="button button-secondary" href="{{ url_for('events.archive') }}">Back to archive</a>
+            {% if not active_event %}
+                <form method="post" action="{{ url_for('events.reopen_archived_event', folder_name=archived_event.archive_folder) }}" data-confirm="Reopen '{{ archived_event.title }}'? Its preserved photos and settings will return in Setup Mode with guest uploads paused.">
+                    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="confirmation" value="reopen">
+                    <button class="button button-primary" type="submit">Reopen event</button>
+                </form>
+            {% endif %}
+            <a class="button button-secondary" href="{{ url_for('events.export_archived_event', folder_name=archived_event.archive_folder) }}">Download event ZIP</a>
+            <form method="post" action="{{ url_for('events.trash_archived_event', folder_name=archived_event.archive_folder) }}" data-confirm="Delete '{{ archived_event.title }}'? It will be moved to Trash first, so it can still be restored.">
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="confirmation" value="trash">
+                <button class="button button-danger" type="submit">Delete archive</button>
+            </form>
+        </div>
+    </section>
+
+    <section class="status-grid" aria-label="Archived event summary">
+        <article class="status-card"><span class="card-number">01</span><div><p class="card-label">Photos</p><h2>{{ photo_count }}</h2><p>Original uploaded files in this archive.</p></div></article>
+        <article class="status-card"><span class="card-number">02</span><div><p class="card-label">Guests</p><h2>{{ guest_count }}</h2><p>Unique guest names in the photo manifest.</p></div></article>
+        <article class="status-card"><span class="card-number">03</span><div><p class="card-label">Closed</p><h2>Archived</h2><p>{{ archived_event.ended_at or "Recorded" }}</p></div></article>
+        <article class="status-card"><span class="card-number">04</span><div><p class="card-label">Workspace</p><h2>Preserved</h2><p>{{ archived_event.archive_folder }}</p></div></article>
+    </section>
+
+    {% if photos %}
+        <section class="photo-grid" aria-label="Archived photos">
+            {% for photo in photos %}
+                <article class="photo-card">
+                    <a class="photo-preview" href="{{ url_for('events.archived_photo', folder_name=archived_event.archive_folder, photo_id=photo.id) }}" target="_blank" rel="noopener">
+                        <img src="{{ url_for('events.archived_photo', folder_name=archived_event.archive_folder, photo_id=photo.id) }}" alt="Archived photo uploaded by {{ photo.guest_name }}" loading="lazy">
+                    </a>
+                    <div class="photo-card-body">
+                        <div>
+                            <p class="card-label">Guest</p>
+                            <h2>{{ photo.guest_name }}</h2>
+                            <p class="photo-meta">{{ photo.created_at }}</p>
+                            <p class="photo-meta">{{ photo.size_bytes|filesize }} · {{ photo.filename }}</p>
+                        </div>
+                        <div class="photo-actions">
+                            <a class="button button-secondary button-small" href="{{ url_for('events.archived_photo', folder_name=archived_event.archive_folder, photo_id=photo.id) }}" target="_blank">Open</a>
+                            <a class="button button-secondary button-small" href="{{ url_for('events.archived_photo', folder_name=archived_event.archive_folder, photo_id=photo.id) }}" download>Download</a>
+                        </div>
+                    </div>
+                </article>
+            {% endfor %}
+        </section>
+    {% else %}
+        <section class="empty-state"><span class="empty-number">00</span><h2>This archive contains no photos.</h2><p>The event details remain preserved and can still be exported.</p></section>
+    {% endif %}
+{% endblock %}

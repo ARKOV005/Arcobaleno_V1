@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block content %}
+    {% if notice == "uploads-open" %}
+        <div class="notice" role="status">
+            <span class="notice-mark" aria-hidden="true">✓</span>
+            <span>Guest photo uploads are open.</span>
+        </div>
+    {% elif notice == "uploads-paused" %}
+        <div class="warning-panel warning-panel-compact" role="status">
+            <div class="warning-mark" aria-hidden="true">Ⅱ</div>
+            <div>
+                <p class="card-label">Guest uploads paused</p>
+                <h2>The camera remains available, but photos cannot be sent.</h2>
+                <p>Resume uploads here when the event network or storage is ready.</p>
+            </div>
+        </div>
+    {% endif %}
+
+    <section class="page-heading page-heading-row">
+        <div>
+            <p class="eyebrow">Event readiness</p>
+            <h1>Preflight and live controls.</h1>
+            <p>Run this checklist before guests arrive. It checks the event workspace, QR setup, network address, storage, backups, logs, and upload availability without changing your photos.</p>
+        </div>
+        <div class="readiness-summary readiness-{{ report.overall }}">
+            <span class="readiness-summary-label">Overall status</span>
+            {% if report.overall == "ready" %}
+                <strong>Ready</strong>
+                <small>All checks passed.</small>
+            {% elif report.overall == "ready-with-warnings" %}
+                <strong>Ready with warnings</strong>
+                <small>Review the highlighted items.</small>
+            {% else %}
+                <strong>Not ready</strong>
+                <small>Fix failed checks before opening the event.</small>
+            {% endif %}
+        </div>
+    </section>
+
+    <section class="status-grid" aria-label="Readiness summary">
+        <article class="status-card">
+            <span class="card-number">01</span>
+            <div><p class="card-label">Passed</p><h2>{{ report.passes }}</h2><p>Checks ready for the event.</p></div>
+        </article>
+        <article class="status-card">
+            <span class="card-number">02</span>
+            <div><p class="card-label">Warnings</p><h2>{{ report.warnings }}</h2><p>Items that deserve operator review.</p></div>
+        </article>
+        <article class="status-card">
+            <span class="card-number">03</span>
+            <div><p class="card-label">Failed</p><h2>{{ report.fails }}</h2><p>Items that should be fixed before guests arrive.</p></div>
+        </article>
+        <article class="status-card">
+            <span class="card-number">04</span>
+            <div>
+                <p class="card-label">Guest uploads</p>
+                <h2>{% if control and control.uploads_open %}Open{% elif active_event %}Paused{% else %}Unavailable{% endif %}</h2>
+                <p>Controlled only from the event laptop.</p>
+            </div>
+        </article>
+    </section>
+
+    {% if active_event and control %}
+        <section class="event-control-panel">
+            <div class="settings-intro">
+                <p class="eyebrow">Live event control</p>
+                <h2>Guest upload gate</h2>
+                <p>Pause uploads during maintenance, a network change, or a storage concern. Existing photos and the slideshow remain available.</p>
+            </div>
+            <form method="post" action="{{ url_for('admin.update_upload_control') }}" class="event-control-form">
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                <label class="field field-wide">
+                    <span class="field-label">Message shown to guests <b>180 characters</b></span>
+                    <textarea name="pause_message" rows="3" maxlength="180">{{ control.pause_message }}</textarea>
+                </label>
+                <div class="event-control-actions">
+                    {% if control.uploads_open %}
+                        <input type="hidden" name="uploads_open" value="false">
+                        <button class="button button-danger" type="submit">Pause guest uploads</button>
+                    {% else %}
+                        <input type="hidden" name="uploads_open" value="true">
+                        <button class="button button-primary" type="submit">Resume guest uploads</button>
+                    {% endif %}
+                </div>
+            </form>
+        </section>
+    {% endif %}
+
+    <section class="readiness-list" aria-label="Preflight checks">
+        {% for check in report.checks %}
+            <article class="readiness-check readiness-check-{{ check.status }}">
+                <span class="readiness-icon" aria-hidden="true">
+                    {% if check.status == "pass" %}✓{% elif check.status == "warn" %}!{% else %}×{% endif %}
+                </span>
+                <div>
+                    <p class="card-label">{{ check.status }}</p>
+                    <h2>{{ check.label }}</h2>
+                    <p>{{ check.detail }}</p>
+                </div>
+            </article>
+        {% endfor %}
+    </section>
+
+    <div class="form-actions readiness-actions">
+        <a class="button button-primary" href="{{ url_for('admin.readiness_page') }}">Run checks again</a>
+    </div>
+{% endblock %}

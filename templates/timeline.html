@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block content %}
+    {% if notice %}
+        <div class="notice" role="status"><span class="notice-mark" aria-hidden="true">✓</span><span>{% if notice == 'marker-added' %}Timeline marker added.{% elif notice == 'marker-deleted' %}Timeline marker removed.{% elif notice == 'display-updated' %}Production displays updated.{% else %}{{ notice }}{% endif %}</span></div>
+    {% endif %}
+
+    <section class="page-heading page-heading-row">
+        <div>
+            <p class="eyebrow">Event timeline</p>
+            <h1>{{ active_event.title }}</h1>
+            <p>Create guest-facing schedule markers and preserve the actual milestones ARCOBALENO records during the celebration.</p>
+        </div>
+        <div class="hero-actions">
+            <form method="post" action="{{ url_for('production.display_timeline') }}">
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                <button class="button button-primary" type="submit">Show Timeline on Displays</button>
+            </form>
+            <a class="button button-secondary" href="{{ url_for('events.photo_library') }}">Live Photo Manager</a>
+        </div>
+    </section>
+
+    <section class="timeline-layout">
+        <article class="timeline-builder">
+            <p class="eyebrow">Add a moment</p>
+            <h2>Build the public event schedule.</h2>
+            <p>Public markers appear on guest phones and can be shown on production displays. Private markers remain operator-only.</p>
+
+            <div class="timeline-presets" aria-label="Timeline presets">
+                <button type="button" data-marker-title="Dinner" data-marker-icon="meal">Dinner</button>
+                <button type="button" data-marker-title="First Dance" data-marker-icon="dance">First Dance</button>
+                <button type="button" data-marker-title="Cake Cutting" data-marker-icon="cake">Cake Cutting</button>
+                <button type="button" data-marker-title="Toast and Speeches" data-marker-icon="toast">Toasts</button>
+                <button type="button" data-marker-title="Bouquet Toss" data-marker-icon="heart">Bouquet Toss</button>
+                <button type="button" data-marker-title="Open Dance Floor" data-marker-icon="music">Dance Floor</button>
+            </div>
+
+            <form method="post" action="{{ url_for('production.add_timeline_marker') }}" class="timeline-form" id="timeline-form">
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="icon" id="timeline-icon" value="marker">
+                <label class="field field-wide">
+                    <span class="field-label">Timeline title</span>
+                    <input id="timeline-title" type="text" name="title" maxlength="100" placeholder="First Dance" required>
+                </label>
+                <label class="field">
+                    <span class="field-label">Scheduled time</span>
+                    <input type="time" name="scheduled_time">
+                </label>
+                <label class="setting-toggle">
+                    <input type="checkbox" name="public" value="true" checked>
+                    <span><strong>Show to guests</strong><small>Include this marker on guest phones and the slideshow timeline screen.</small></span>
+                </label>
+                <label class="field field-wide">
+                    <span class="field-label">Optional detail</span>
+                    <textarea name="detail" rows="3" maxlength="240" placeholder="Join us near the dance floor."></textarea>
+                </label>
+                <button class="button button-primary" type="submit">Add Timeline Marker</button>
+            </form>
+        </article>
+
+        <article class="timeline-display-summary">
+            <p class="eyebrow">Current display state</p>
+            <h2>{{ event_control.slideshow_state|title }}</h2>
+            <p>The Timeline screen is synced to every wired and network slideshow connected to this event.</p>
+            <form method="post" action="{{ url_for('production.slideshow_control_api') }}" data-timeline-resume-form>
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="state" value="playing">
+                <button class="button button-secondary" type="submit">Resume Slideshow</button>
+            </form>
+            <div class="timeline-display-tip">
+                <strong>Production tip</strong>
+                <p>Show the schedule during dinner or room changes, then resume photos when the next program segment begins.</p>
+            </div>
+        </article>
+    </section>
+
+    <section class="event-timeline-list" aria-label="Event timeline entries">
+        <div class="section-heading">
+            <div><p class="eyebrow">Recorded timeline</p><h2>Schedule markers and live milestones.</h2></div>
+            <span>{{ entries|length }} entries</span>
+        </div>
+
+        {% if entries %}
+            {% for entry in entries %}
+                <article class="timeline-entry timeline-entry-{{ entry.kind }}">
+                    <div class="timeline-entry-time">
+                        <strong>{{ entry.scheduled_time or entry.created_at }}</strong>
+                        <small>{{ entry.kind|title }}</small>
+                    </div>
+                    <span class="timeline-entry-dot" aria-hidden="true"></span>
+                    <div class="timeline-entry-copy">
+                        <div class="timeline-entry-heading">
+                            <h2>{{ entry.title }}</h2>
+                            {% if entry.public %}<span class="badge badge-soft">Guest-facing</span>{% else %}<span class="badge badge-muted">Operator-only</span>{% endif %}
+                        </div>
+                        {% if entry.detail %}<p>{{ entry.detail }}</p>{% endif %}
+                        <div class="timeline-entry-actions">
+                            <a class="text-link" href="{{ url_for('events.photo_library', around=entry.photo_window_at, label=entry.title) }}">View nearby photos</a>
+                            {% if entry.kind == 'marker' and entry.public %}
+                                <form method="post" action="{{ url_for('production.display_timeline') }}">
+                                    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                                    <input type="hidden" name="marker_id" value="{{ entry.id }}">
+                                    <button class="text-button" type="submit">Show this moment</button>
+                                </form>
+                            {% endif %}
+                            {% if entry.kind == 'marker' %}
+                                <form method="post" action="{{ url_for('production.delete_timeline_marker', entry_id=entry.id) }}" data-confirm="Remove this timeline marker?">
+                                    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                                    <button class="text-button text-button-danger" type="submit">Remove</button>
+                                </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                </article>
+            {% endfor %}
+        {% else %}
+            <section class="empty-state"><span class="empty-number">00</span><h2>No timeline moments yet.</h2><p>Add a marker above or start Live Event Mode to record event milestones.</p></section>
+        {% endif %}
+    </section>
+{% endblock %}
+
+{% block scripts %}<script src="{{ url_for('static', filename='js/timeline.js') }}" defer></script>{% endblock %}

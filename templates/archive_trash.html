@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <section class="page-heading page-heading-row">
+        <div>
+            <p class="eyebrow">Archive trash</p>
+            <h1>Deleted events.</h1>
+            <p>Restore an event to the archive, or permanently erase it when you are certain it is no longer needed.</p>
+        </div>
+        <div class="hero-actions">
+            <a class="button button-secondary" href="{{ url_for('events.archive') }}">Back to archive</a>
+        </div>
+    </section>
+
+    {% if notice %}
+        <div class="notice" role="status">
+            <span class="notice-mark" aria-hidden="true">✓</span>
+            <span>{{ notice }}</span>
+        </div>
+    {% endif %}
+
+    {% if deleted_events %}
+        <section class="archive-list" aria-label="Deleted archived events">
+            {% for event in deleted_events %}
+                <article class="archive-card archive-card-actionable">
+                    <div class="archive-card-main">
+                        <p class="card-label">Deleted event</p>
+                        <h2>{{ event.title }}</h2>
+                        <p>
+                            {% if event.hosts %}{{ event.hosts }} · {% endif %}
+                            {{ event.event_date|pretty_date }}
+                            {% if event.venue %} · {{ event.venue }}{% endif %}
+                        </p>
+                    </div>
+                    <dl class="archive-meta">
+                        <div><dt>Status</dt><dd><span class="badge">In Trash</span></dd></div>
+                        <div><dt>Photos</dt><dd>{{ event.photo_count }}</dd></div>
+                        <div><dt>Guests</dt><dd>{{ event.guest_count }}</dd></div>
+                        <div><dt>Deleted</dt><dd>{{ event.deleted_at or "Recorded" }}</dd></div>
+                    </dl>
+                    <div class="archive-actions">
+                        <form method="post" action="{{ url_for('events.restore_trashed_event', folder_name=event.trash_folder) }}" data-confirm="Restore '{{ event.title }}' to the event archive?">
+                            <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                            <input type="hidden" name="confirmation" value="restore">
+                            <button class="button button-secondary button-small" type="submit">Restore</button>
+                        </form>
+                        <form method="post" action="{{ url_for('events.permanently_delete_trashed_event', folder_name=event.trash_folder) }}" data-confirm-text="DELETE" data-confirm="Permanently delete '{{ event.title }}' and all of its photos? This cannot be undone.">
+                            <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                            <input type="hidden" name="confirmation" value="DELETE">
+                            <button class="button button-danger button-small" type="submit">Delete permanently</button>
+                        </form>
+                    </div>
+                </article>
+            {% endfor %}
+        </section>
+    {% else %}
+        <section class="empty-state">
+            <span class="empty-number">00</span>
+            <h2>Trash is empty.</h2>
+            <p>Deleted archived events appear here until they are restored or permanently removed.</p>
+        </section>
+    {% endif %}
+{% endblock %}

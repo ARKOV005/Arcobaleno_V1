@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block content %}
+    {% if notice == "saved" %}
+        <div class="notice" role="status">
+            <span class="notice-mark" aria-hidden="true">✓</span>
+            <span>Settings saved and applied.</span>
+        </div>
+    {% elif notice == "saved-restart" %}
+        <div class="warning-panel warning-panel-compact" role="status">
+            <div class="warning-mark" aria-hidden="true">!</div>
+            <div>
+                <p class="card-label">Settings saved</p>
+                <h2>Restart ARCOBALENO once.</h2>
+                <p>The reserved IP or automatic browser setting changed. Close the terminal window and launch ARCOBALENO again.</p>
+            </div>
+        </div>
+    {% endif %}
+
+    <section class="page-heading">
+        <p class="eyebrow">Settings</p>
+        <h1>Configure ARCOBALENO.</h1>
+        <p>These settings are saved in <code>config.json</code>. Camera and slideshow controls apply immediately unless a restart notice appears.</p>
+    </section>
+
+    <form class="event-form settings-form" method="post" action="{{ url_for('admin.save_settings') }}">
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+
+        {% if errors.get('general') %}
+            <div class="form-summary" role="alert">{{ errors.general }}</div>
+        {% endif %}
+
+        <section class="settings-section">
+            <div class="settings-intro">
+                <p class="eyebrow">Guest camera</p>
+                <h2>Upload limits</h2>
+                <p>Use zero for an unlimited number of photos per device. The upload-size limit protects the laptop from unusually large files.</p>
+            </div>
+            <div class="form-grid settings-fields">
+                <label class="field">
+                    <span class="field-label">Photos per device <b>0–1000</b></span>
+                    <input type="number" min="0" max="1000" name="photo_limit_per_device" value="{{ form_data.photo_limit_per_device }}" required>
+                    {% if errors.get('photo_limit_per_device') %}<small class="field-error">{{ errors.photo_limit_per_device }}</small>{% endif %}
+                </label>
+                <label class="field">
+                    <span class="field-label">Maximum upload size <b>MB</b></span>
+                    <input type="number" min="1" max="250" name="max_upload_megabytes" value="{{ form_data.max_upload_megabytes }}" required>
+                    {% if errors.get('max_upload_megabytes') %}<small class="field-error">{{ errors.max_upload_megabytes }}</small>{% endif %}
+                </label>
+            </div>
+        </section>
+
+        <section class="settings-section">
+            <div class="settings-intro">
+                <p class="eyebrow">Live slideshow</p>
+                <h2>Playback behavior</h2>
+                <p>Choose how long each photo stays onscreen and how often the projector checks for new uploads.</p>
+            </div>
+            <div class="form-grid settings-fields">
+                <label class="field">
+                    <span class="field-label">Seconds per photo <b>2–60</b></span>
+                    <input type="number" min="2" max="60" step="0.5" name="seconds_per_photo" value="{{ form_data.seconds_per_photo }}" required>
+                    {% if errors.get('seconds_per_photo') %}<small class="field-error">{{ errors.seconds_per_photo }}</small>{% endif %}
+                </label>
+                <label class="field">
+                    <span class="field-label">Update check interval <b>seconds</b></span>
+                    <input type="number" min="0.5" max="30" step="0.5" name="poll_interval_seconds" value="{{ form_data.poll_interval_seconds }}" required>
+                    {% if errors.get('poll_interval_seconds') %}<small class="field-error">{{ errors.poll_interval_seconds }}</small>{% endif %}
+                </label>
+                <label class="setting-toggle field-wide">
+                    <input type="checkbox" name="show_guest_name" value="true" {% if form_data.show_guest_name in [true, 'true', 'on', '1'] %}checked{% endif %}>
+                    <span><strong>Show guest names</strong><small>Display the uploader’s name over slideshow photos.</small></span>
+                </label>
+                <label class="setting-toggle field-wide">
+                    <input type="checkbox" name="show_timestamp" value="true" {% if form_data.show_timestamp in [true, 'true', 'on', '1'] %}checked{% endif %}>
+                    <span><strong>Show upload times</strong><small>Display the photo’s received time in the slideshow information area.</small></span>
+                </label>
+            </div>
+        </section>
+
+        <section class="settings-section">
+            <div class="settings-intro">
+                <p class="eyebrow">Startup and network</p>
+                <h2>Server behavior</h2>
+                <p>The reserved event IP is authoritative. When it is unavailable, ARCOBALENO warns the operator instead of placing a VPN or virtual-adapter address in guest QR codes. Changes require one restart.</p>
+            </div>
+            <div class="form-grid settings-fields">
+                <label class="field field-wide">
+                    <span class="field-label">Reserved event server IP <b>IPv4</b></span>
+                    <input type="text" name="preferred_ip" value="{{ form_data.preferred_ip }}" placeholder="192.168.0.106" inputmode="decimal">
+                    <small class="field-help">Use the DHCP reservation configured on your ER605. Leave blank only for automatic fallback setups.</small>
+                    {% if errors.get('preferred_ip') %}<small class="field-error">{{ errors.preferred_ip }}</small>{% endif %}
+                </label>
+                <label class="setting-toggle field-wide">
+                    <input type="checkbox" name="open_browser" value="true" {% if form_data.open_browser in [true, 'true', 'on', '1'] %}checked{% endif %}>
+                    <span><strong>Open operator browser automatically</strong><small>Launch the dashboard when START_ARCOBALENO.bat finishes starting the server.</small></span>
+                </label>
+            </div>
+        </section>
+
+        <div class="form-actions">
+            <a class="button button-secondary" href="{{ url_for('events.home') }}">Cancel</a>
+            <button class="button button-primary" type="submit">Save application settings</button>
+        </div>
+    </form>
+
+    <section class="settings-shutdown" aria-labelledby="settings-shutdown-title">
+        <div>
+            <p class="eyebrow">Server session</p>
+            <h2 id="settings-shutdown-title">Finished using ARCOBALENO?</h2>
+            {% if nav_active_event %}
+                <p><strong>{{ nav_active_event.title }}</strong> will remain active. Shutting down does not archive the event or remove any photos.</p>
+            {% else %}
+                <p>Close the local server cleanly so the next launch is not mistaken for a crash or power interruption.</p>
+            {% endif %}
+        </div>
+        <form method="post" action="{{ url_for('admin.shutdown_application') }}" data-confirm="Shut down ARCOBALENO safely? The browser will lose connection when the server stops.">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+            <button class="button button-danger" type="submit">Shut down ARCOBALENO</button>
+        </form>
+    </section>
+
+    <section class="settings-tools" aria-labelledby="settings-tools-title">
+        <div>
+            <p class="eyebrow">System tools</p>
+            <h2 id="settings-tools-title">Maintenance and support.</h2>
+            <p>These tools stay off the main navigation because they are used only during setup or troubleshooting.</p>
+        </div>
+        <div class="settings-tool-links">
+            {% if nav_active_event %}<a href="{{ url_for('admin.readiness_page') }}"><strong>Readiness check</strong><small>Verify network, storage, and event setup.</small></a>{% endif %}
+            <a href="{{ url_for('admin.recovery_page') }}"><strong>Recovery</strong><small>Backups, diagnostics, and application logs.</small></a>
+            <a href="{{ url_for('admin.about_page') }}"><strong>About</strong><small>Version and deployment information.</small></a>
+        </div>
+    </section>
+{% endblock %}

@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 150" role="img" aria-labelledby="title desc">
+  <title id="title">ARCOBALENO Multimedia</title>
+  <desc id="desc">ARCOBALENO wordmark with a four-bar signal mark in warm photographic colors.</desc>
+  <defs>
+    <linearGradient id="red" x1="0" y1="1" x2="0" y2="0"><stop stop-color="#a83228"/><stop offset="1" stop-color="#d84f35"/></linearGradient>
+    <linearGradient id="orange" x1="0" y1="1" x2="0" y2="0"><stop stop-color="#d45a1d"/><stop offset="1" stop-color="#ef8b2c"/></linearGradient>
+    <linearGradient id="gold" x1="0" y1="1" x2="0" y2="0"><stop stop-color="#cc8d19"/><stop offset="1" stop-color="#f4c247"/></linearGradient>
+    <linearGradient id="plum" x1="0" y1="1" x2="0" y2="0"><stop stop-color="#65404b"/><stop offset="1" stop-color="#8b5b66"/></linearGradient>
+  </defs>
+  <g transform="translate(12 18)">
+    <rect x="0" y="68" width="16" height="34" rx="8" fill="url(#red)"/>
+    <rect x="25" y="51" width="16" height="51" rx="8" fill="url(#orange)"/>
+    <rect x="50" y="32" width="16" height="70" rx="8" fill="url(#gold)"/>
+    <rect x="75" y="10" width="16" height="92" rx="8" fill="url(#plum)"/>
+  </g>
+  <text x="128" y="85" fill="#282422" font-family="Segoe UI, Arial, sans-serif" font-size="63" font-weight="500" letter-spacing="6">ARCOBALENO</text>
+  <text x="132" y="122" fill="#825158" font-family="Segoe UI, Arial, sans-serif" font-size="15" font-weight="600" letter-spacing="9">MULTIMEDIA</text>
+</svg>

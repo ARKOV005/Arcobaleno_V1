@@ -1,0 +1,38 @@
+ARCOBALENO 1.1.0 — Preview 1
+Event Reopening and Guest Themes — July 31, 2026
+
+This preview begins the ARCOBALENO 1.1 feature line while preserving the
+fully tested 1.0.0 Official Stable package as the production rollback build.
+
+WHAT IS NEW
+- The Create Event form now starts completely blank. Sample Jack and Jill
+  names and the automatic date are no longer prefilled, reducing accidental
+  creation of test events.
+- Archived events can be reopened from the Events archive when no other event
+  is active.
+- Reopened events retain their photos, moderation records, guest identities,
+  shot counts, timeline, access settings, and event history.
+- Reopened events always return in Setup Mode with guest uploads paused and
+  the slideshow on the ARCOBALENO logo screen. Press Start Live Event only
+  after checking the event details and equipment.
+- Every event can choose one of six guest experience themes:
+    Default, Floral, Secret Garden, Ocean, Ballroom, or Disco.
+- Themes are intentionally limited to the Guest Camera and Slideshow Display.
+  They do not recolor the operator dashboard and are not burned into uploaded
+  photos.
+- The theme can be changed later through Edit Event. Open camera and display
+  pages update to the saved event theme during normal status polling.
+
+ARCHIVED EVENT SAFETY
+Reopening moves the selected archived workspace back into the active event
+slot. Its previous live/upload control record is preserved in event history,
+but is never resumed automatically. Only one event can be active at a time.
+
+PREVIEW STATUS
+This package passed Python compilation, JavaScript syntax checks, Jinja
+template parsing, direct event lifecycle tests, and Flask route tests for:
+blank event creation, theme persistence, camera/display theme isolation,
+archiving, and safe event reopening.
+
+Keep ARCOBALENO 1.0.0 Official Stable untouched for real-event rollback until
+this preview has completed your own laptop and phone testing.

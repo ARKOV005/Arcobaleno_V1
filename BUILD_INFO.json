@@ -1,0 +1,9 @@
+{
+  "application": "ARCOBALENO",
+  "version": "1.1.0-preview1",
+  "channel": "preview",
+  "release_date": "2026-07-31",
+  "promoted_from": "1.0.0",
+  "baseline": "ARCOBALENO 1.0.0 Official Stable",
+  "package_type": "portable-source-with-private-environment"
+}

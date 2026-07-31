@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <section class="page-heading page-heading-row events-heading">
+        <div>
+            <p class="eyebrow">Events</p>
+            <h1>Every event, in one place.</h1>
+            <p>Manage the current workspace, finish it safely, then return to completed events whenever you need photos or exports.</p>
+        </div>
+        <div class="hero-actions">
+            {% if not active_event %}<a class="button button-primary" href="{{ url_for('events.new_event') }}">Create event</a>{% endif %}
+            <a class="button button-secondary" href="{{ url_for('events.archive_trash') }}">Trash{% if trash_count %} ({{ trash_count }}){% endif %}</a>
+        </div>
+    </section>
+
+    {% if notice %}
+        <div class="notice" role="status">
+            <span class="notice-mark" aria-hidden="true">✓</span>
+            <span>{{ notice }}</span>
+        </div>
+    {% endif %}
+
+    {% if active_event %}
+        <section class="events-current-card" aria-labelledby="current-event-title">
+            <div class="events-current-main">
+                <div class="events-current-status">
+                    <span class="live-dot" aria-hidden="true"></span>
+                    <span>Current event</span>
+                </div>
+                <h2 id="current-event-title">{{ active_event.title }}</h2>
+                <p>
+                    {% if active_event.hosts %}{{ active_event.hosts }} · {% endif %}
+                    {{ active_event.event_date|pretty_date }}
+                    {% if active_event.venue %} · {{ active_event.venue }}{% endif %}
+                </p>
+                <div class="events-current-metrics" aria-label="Current event summary">
+                    <span><strong>{{ active_summary.photo_counts.total }}</strong> photos</span>
+                    <span><strong>{{ active_summary.guest_count }}</strong> guests</span>
+                    <span><strong>{{ active_summary.photo_counts.pending }}</strong> review</span>
+                    <span><strong>{{ active_summary.event_control.event_mode|title if active_summary.event_control else 'Setup' }}</strong> mode</span>
+                </div>
+            </div>
+            <div class="events-current-actions">
+                <a class="button button-primary" href="{{ url_for('events.photo_library') }}">Open Live Console</a>
+                <a class="button button-secondary" href="{{ url_for('events.edit_event') }}">Edit details</a>
+                <a class="button button-secondary" href="{{ url_for('admin.readiness_page') }}">Readiness check</a>
+                <a class="button button-secondary" href="{{ url_for('events.export_event') }}">Download ZIP</a>
+                <form method="post" action="{{ url_for('events.end_event') }}" data-confirm="Finish '{{ active_event.title }}' and move it to completed events?">
+                    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="confirmation" value="archive">
+                    <button class="button button-danger" type="submit">Finish and archive</button>
+                </form>
+            </div>
+        </section>
+    {% else %}
+        <section class="events-no-current">
+            <div>
+                <p class="eyebrow">Current event</p>
+                <h2>No event is running.</h2>
+                <p>Create a new workspace when you are ready to prepare guest access and the projector.</p>
+            </div>
+            <a class="button button-primary" href="{{ url_for('events.new_event') }}">Create event</a>
+        </section>
+    {% endif %}
+
+    <section class="events-archive-heading">
+        <div>
+            <p class="eyebrow">Completed events</p>
+            <h2>Archive</h2>
+        </div>
+        <span>{{ archived_events|length }} stored locally</span>
+    </section>
+
+    {% if archived_events %}
+        <section class="archive-list" aria-label="Archived events">
+            {% for event in archived_events %}
+                <article class="archive-card archive-card-actionable">
+                    <div class="archive-card-main">
+                        <p class="card-label">Completed event</p>
+                        <h2>{{ event.title }}</h2>
+                        <p>
+                            {% if event.hosts %}{{ event.hosts }} · {% endif %}
+                            {{ event.event_date|pretty_date }}
+                            {% if event.venue %} · {{ event.venue }}{% endif %}
+                        </p>
+                    </div>
+                    <dl class="archive-meta">
+                        <div><dt>Status</dt><dd><span class="badge">Archived</span></dd></div>
+                        <div><dt>Photos</dt><dd>{{ event.photo_count }}</dd></div>
+                        <div><dt>Guests</dt><dd>{{ event.guest_count }}</dd></div>
+                        <div><dt>Closed</dt><dd>{{ event.ended_at or "Recorded" }}</dd></div>
+                    </dl>
+                    <div class="archive-actions">
+                        {% if not active_event %}
+                            <form method="post" action="{{ url_for('events.reopen_archived_event', folder_name=event.archive_folder) }}" data-confirm="Reopen '{{ event.title }}'? Its preserved photos and settings will return in Setup Mode with guest uploads paused.">
+                                <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                                <input type="hidden" name="confirmation" value="reopen">
+                                <button class="button button-primary button-small" type="submit">Reopen event</button>
+                            </form>
+                        {% endif %}
+                        <a class="button button-secondary button-small" href="{{ url_for('events.archive_detail', folder_name=event.archive_folder) }}">Open event</a>
+                        <a class="button button-secondary button-small" href="{{ url_for('events.export_archived_event', folder_name=event.archive_folder) }}">Download ZIP</a>
+                        <form method="post" action="{{ url_for('events.trash_archived_event', folder_name=event.archive_folder) }}" data-confirm="Delete '{{ event.title }}'? It will be moved to Trash first, so it can still be restored.">
+                            <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                            <input type="hidden" name="confirmation" value="trash">
+                            <button class="button button-danger button-small" type="submit">Delete</button>
+                        </form>
+                    </div>
+                </article>
+            {% endfor %}
+        </section>
+    {% else %}
+        <section class="empty-state events-empty-archive">
+            <span class="empty-number">00</span>
+            <h2>No completed events yet.</h2>
+            <p>Finished events will appear here with their photos, exports, and safe-delete options.</p>
+        </section>
+    {% endif %}
+{% endblock %}

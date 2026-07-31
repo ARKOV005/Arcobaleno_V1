@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block content %}
+    {% if notice %}
+        <div class="notice" role="status">
+            <span class="notice-mark" aria-hidden="true">✓</span>
+            <span>{{ notice }}</span>
+        </div>
+    {% endif %}
+
+    <section class="page-heading">
+        <p class="eyebrow">{% if form_mode == "create" %}New event{% else %}Event settings{% endif %}</p>
+        <h1>{% if form_mode == "create" %}Create the event workspace.{% else %}Edit event details.{% endif %}</h1>
+        <p>
+            These details identify the current event and will later appear throughout the camera,
+            slideshow, QR, and export experience.
+        </p>
+    </section>
+
+    <form class="event-form" method="post"
+          action="{% if form_mode == 'create' %}{{ url_for('events.create_event') }}{% else %}{{ url_for('events.update_event') }}{% endif %}">
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+
+        {% if errors %}
+            <div class="form-summary" role="alert">
+                <strong>Please check the highlighted fields.</strong>
+                <span>Your event was not saved yet.</span>
+            </div>
+        {% endif %}
+
+        <div class="form-grid">
+            <label class="field field-wide">
+                <span class="field-label">Event title <b>Required</b></span>
+                <input type="text" name="title" maxlength="100" required autofocus
+                       value="{{ form_data.title }}"
+                       placeholder="Enter the event title"
+                       {% if errors.title %}aria-invalid="true" aria-describedby="title-error"{% endif %}>
+                {% if errors.title %}<small class="field-error" id="title-error">{{ errors.title }}</small>{% endif %}
+                <small class="field-help">The main name displayed across ARCOBALENO.</small>
+            </label>
+
+            <label class="field">
+                <span class="field-label">Hosts / couple</span>
+                <input type="text" name="hosts" maxlength="120"
+                       value="{{ form_data.hosts }}" placeholder="Hosts, couple, celebrant, or organization"
+                       {% if errors.hosts %}aria-invalid="true" aria-describedby="hosts-error"{% endif %}>
+                {% if errors.hosts %}<small class="field-error" id="hosts-error">{{ errors.hosts }}</small>{% endif %}
+            </label>
+
+            <label class="field">
+                <span class="field-label">Event date <b>Required</b></span>
+                <span class="date-control">
+                    <input type="date" name="event_date" required value="{{ form_data.event_date }}"
+                           {% if errors.event_date %}aria-invalid="true" aria-describedby="date-error"{% endif %}>
+                </span>
+                {% if errors.event_date %}<small class="field-error" id="date-error">{{ errors.event_date }}</small>{% endif %}
+            </label>
+
+            <label class="field field-wide">
+                <span class="field-label">Venue</span>
+                <input type="text" name="venue" maxlength="160"
+                       value="{{ form_data.venue }}" placeholder="Venue name, city, or event hall"
+                       {% if errors.venue %}aria-invalid="true" aria-describedby="venue-error"{% endif %}>
+                {% if errors.venue %}<small class="field-error" id="venue-error">{{ errors.venue }}</small>{% endif %}
+            </label>
+
+            <fieldset class="field field-wide theme-field" {% if errors.theme %}aria-describedby="theme-error"{% endif %}>
+                <legend class="field-label">Guest experience theme <b>Camera + Display only</b></legend>
+                <small class="field-help theme-help">The operator dashboard stays unchanged. This theme appears only on the guest camera and slideshow display.</small>
+                <div class="theme-options">
+                    {% set selected_theme = form_data.theme or 'default' %}
+                    <label class="theme-option">
+                        <input type="radio" name="theme" value="default" {% if selected_theme == 'default' %}checked{% endif %}>
+                        <span class="theme-swatch theme-swatch-default" aria-hidden="true"></span>
+                        <span><strong>Default</strong><small>Current rose and sage</small></span>
+                    </label>
+                    <label class="theme-option">
+                        <input type="radio" name="theme" value="floral" {% if selected_theme == 'floral' %}checked{% endif %}>
+                        <span class="theme-swatch theme-swatch-floral" aria-hidden="true"></span>
+                        <span><strong>Floral</strong><small>Blush blooms and greenery</small></span>
+                    </label>
+                    <label class="theme-option">
+                        <input type="radio" name="theme" value="secret-garden" {% if selected_theme == 'secret-garden' %}checked{% endif %}>
+                        <span class="theme-swatch theme-swatch-secret-garden" aria-hidden="true"></span>
+                        <span><strong>Secret Garden</strong><small>Emerald foliage and gold</small></span>
+                    </label>
+                    <label class="theme-option">
+                        <input type="radio" name="theme" value="ocean" {% if selected_theme == 'ocean' %}checked{% endif %}>
+                        <span class="theme-swatch theme-swatch-ocean" aria-hidden="true"></span>
+                        <span><strong>Ocean</strong><small>Deep blue and seafoam</small></span>
+                    </label>
+                    <label class="theme-option">
+                        <input type="radio" name="theme" value="ballroom" {% if selected_theme == 'ballroom' %}checked{% endif %}>
+                        <span class="theme-swatch theme-swatch-ballroom" aria-hidden="true"></span>
+                        <span><strong>Ballroom</strong><small>Champagne and black tie</small></span>
+                    </label>
+                    <label class="theme-option">
+                        <input type="radio" name="theme" value="disco" {% if selected_theme == 'disco' %}checked{% endif %}>
+                        <span class="theme-swatch theme-swatch-disco" aria-hidden="true"></span>
+                        <span><strong>Disco</strong><small>Neon lights and midnight</small></span>
+                    </label>
+                </div>
+                {% if errors.theme %}<small class="field-error" id="theme-error">{{ errors.theme }}</small>{% endif %}
+            </fieldset>
+
+            <label class="field field-wide">
+                <span class="field-label">Operator notes</span>
+                <textarea name="notes" maxlength="500" rows="5"
+                          placeholder="Private setup notes, contact reminders, or event instructions."
+                          {% if errors.notes %}aria-invalid="true" aria-describedby="notes-error"{% endif %}>{{ form_data.notes }}</textarea>
+                {% if errors.notes %}<small class="field-error" id="notes-error">{{ errors.notes }}</small>{% endif %}
+                <small class="field-help">These notes stay on the operator dashboard and are not shown to guests.</small>
+            </label>
+        </div>
+
+        <div class="form-actions">
+            <a class="button button-secondary" href="{{ url_for('events.home') }}">Cancel</a>
+            <button class="button button-primary" type="submit">
+                {% if form_mode == "create" %}Create event{% else %}Save changes{% endif %}
+            </button>
+        </div>
+    </form>
+
+    <aside class="form-assurance">
+        <span class="assurance-mark" aria-hidden="true">01</span>
+        <div>
+            <strong>Stored locally on this laptop.</strong>
+            <p>ARCOBALENO writes event information atomically and keeps backup snapshots before important changes.</p>
+        </div>
+    </aside>
+{% endblock %}

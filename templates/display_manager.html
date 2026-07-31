@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div
+        id="production-dashboard"
+        class="display-manager"
+        data-event-id="{{ active_event.id }}"
+        data-snapshot-url="{{ url_for('production.operator_snapshot_api') }}"
+        data-live-url="{{ url_for('production.live_events_api') }}"
+        data-slideshow-control-url="{{ url_for('production.slideshow_control_api') }}"
+        data-wired-url="{{ url_for('slideshow.slideshow_page', display='wired', fullscreen='1') }}"
+        data-network-slideshow-url="{{ url_for('slideshow.slideshow_page', display='network') }}"
+        data-csrf-token="{{ csrf_token() }}"
+    >
+        <section class="page-heading display-heading">
+            <p class="eyebrow">Display</p>
+            <h1>What the room sees.</h1>
+            <p>Launch the projector output, open a browser-based backup display, or preview the current presentation without adding playback controls to the public screen.</p>
+        </section>
+
+        <section class="display-overview-card">
+            <div class="display-overview-copy">
+                <div class="live-connection-line" aria-live="polite">
+                    <span class="live-dot" id="operator-live-dot" aria-hidden="true"></span>
+                    <span id="operator-live-label">Connecting display status…</span>
+                </div>
+                <p class="card-label">Current event</p>
+                <h2>{{ active_event.title }}</h2>
+                <p>{{ approved_photo_count }} approved photo{% if approved_photo_count != 1 %}s{% endif %} ready for display.</p>
+            </div>
+            <div class="display-current-state">
+                <span>Slideshow state</span>
+                <strong id="slideshow-state-pill">{{ event_control.slideshow_state|title }}</strong>
+                <small>Playback controls stay in Live Console.</small>
+                <a class="text-link" href="{{ url_for('events.photo_library') }}">Open Live Console →</a>
+            </div>
+        </section>
+
+        <section class="display-launch-grid" aria-label="Display launch options">
+            <button class="display-launch-card display-launch-primary" id="launch-wired-display" type="button">
+                <span class="display-launch-icon" aria-hidden="true">▣</span>
+                <span><strong>Projector display</strong><small>Best for the HDMI-connected second screen.</small></span>
+                <b>Launch ↗</b>
+            </button>
+            <a class="display-launch-card" href="{{ url_for('slideshow.slideshow_page', display='network') }}" target="_blank" rel="noopener">
+                <span class="display-launch-icon" aria-hidden="true">⌁</span>
+                <span><strong>Network display</strong><small>Open on another laptop, TV, or browser.</small></span>
+                <b>Open ↗</b>
+            </a>
+            <a class="display-launch-card" href="{{ url_for('slideshow.slideshow_page', display='preview') }}" target="_blank" rel="noopener">
+                <span class="display-launch-icon" aria-hidden="true">◫</span>
+                <span><strong>Preview</strong><small>Check the slideshow on this laptop.</small></span>
+                <b>Preview ↗</b>
+            </a>
+        </section>
+
+        <section class="display-health-card" aria-labelledby="display-health-title">
+            <div class="dashboard-compact-heading">
+                <div>
+                    <p class="eyebrow">Output health</p>
+                    <h2 id="display-health-title">{% if display_status.total %}Displays connected{% else %}No display heartbeat yet{% endif %}</h2>
+                </div>
+                <span class="display-health-total"><strong id="metric-displays">{{ display_status.total }}</strong> online</span>
+            </div>
+            <div class="display-health-grid">
+                <article><span>Projector</span><strong id="display-wired-count">{{ display_status.wired }}</strong><small>Wired outputs</small></article>
+                <article><span>Network</span><strong id="display-network-count">{{ display_status.network }}</strong><small>Remote browser outputs</small></article>
+                <article><span>Preview</span><strong id="display-preview-count">{{ display_status.preview }}</strong><small>Operator previews</small></article>
+                <article><span>Shown</span><strong id="metric-displayed">{{ display_status.displayed_unique }}</strong><small>Unique photos reported</small></article>
+            </div>
+            <span class="sr-only" id="metric-display-detail">{{ display_status.wired }} wired · {{ display_status.network }} network</span>
+        </section>
+
+        <section class="display-note">
+            <div>
+                <p class="eyebrow">Clean public output</p>
+                <h2>The projector stays presentation-only.</h2>
+                <p>Pause, next, hold, and emergency actions remain in Live Console. The slideshow itself shows only the event, photos, and counter.</p>
+            </div>
+            <a class="button button-secondary" href="{{ url_for('admin.settings_page') }}">Display settings</a>
+        </section>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script src="{{ url_for('static', filename='js/production-dashboard.js') }}" defer></script>
+{% endblock %}
