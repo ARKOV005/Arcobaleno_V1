@@ -2864,3 +2864,19 @@ kbd { padding: 2px 6px; border: 1px solid rgba(70, 55, 46, 0.16); border-bottom-
 @media (max-width: 520px) {
     .theme-options { grid-template-columns: 1fr; }
 }
+
+
+/* v1.2 mobile Operator Remote card */
+.operator-remote-card{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:28px;align-items:center;margin:24px 0;padding:28px;border:1px solid rgba(86,66,62,.14);border-radius:28px;background:linear-gradient(135deg,rgba(255,255,255,.92),rgba(244,237,232,.9));box-shadow:0 24px 70px rgba(75,55,48,.09)}
+.operator-remote-copy h2{margin:.1rem 0 .55rem;font-family:var(--font-display,Georgia,serif);font-size:clamp(1.55rem,3vw,2.2rem)}
+.operator-remote-copy>p:not(.eyebrow){max-width:680px;color:var(--muted,#6e6662)}
+.operator-remote-credentials{display:grid;grid-template-columns:minmax(0,2fr) minmax(110px,.7fr) minmax(110px,.7fr);gap:10px;margin:18px 0}
+.operator-remote-credentials>div{display:grid;gap:5px;padding:12px 14px;border:1px solid rgba(86,66,62,.12);border-radius:15px;background:rgba(255,255,255,.62)}
+.operator-remote-credentials span{font-size:.68rem;text-transform:uppercase;letter-spacing:.12em;color:#8e817b;font-weight:800}
+.operator-remote-credentials code{font-size:.84rem;overflow-wrap:anywhere;color:#332d2a}
+.operator-remote-credentials strong{font-size:1.45rem;letter-spacing:.14em;color:#332d2a}
+.operator-remote-credentials b{font-size:.88rem}.operator-remote-credentials .is-enabled{color:#276b4a}.operator-remote-credentials .is-disabled{color:#a34a4a}
+.operator-remote-actions{display:flex;gap:10px;flex-wrap:wrap}.operator-remote-actions form{margin:0}
+.operator-remote-qr{display:grid;justify-items:center;gap:7px;padding:13px;border:1px solid rgba(86,66,62,.12);border-radius:22px;background:#fff}
+.operator-remote-qr img{width:156px;height:156px;display:block}.operator-remote-qr small{color:#81736d;font-size:.7rem}
+@media(max-width:760px){.operator-remote-card{grid-template-columns:1fr}.operator-remote-qr{justify-self:start}.operator-remote-credentials{grid-template-columns:1fr 1fr}.operator-remote-credentials>div:first-child{grid-column:1/-1}}

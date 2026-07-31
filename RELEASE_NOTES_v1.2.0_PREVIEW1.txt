@@ -1,0 +1,48 @@
+ARCOBALENO 1.2.0 — Preview 1
+Released: August 1, 2026
+
+NEW: OPERATOR REMOTE
+
+A phone connected to the same event Wi-Fi can now open:
+
+  http://<event-laptop-ip>:5000/remote
+
+The laptop dashboard shows a scannable QR code and a persistent six-digit PIN.
+The PIN can be reset or mobile access can be disabled from the laptop.
+
+REMOTE FEATURES
+
+  • Live photo, guest, exhausted-device, and pending-review counters
+  • Server, guest-camera, display, network, and storage health
+  • Start Live Event or return to Setup Mode
+  • Resume or pause guest uploads
+  • Play, pause, logo, or black-screen slideshow states
+  • Previous, next, and restart slideshow commands
+  • Reset guest shot allowances without deleting photos
+  • Latest-upload preview with quick Approve, Hide, and Favorite controls
+  • Safe event archiving with typed confirmation
+  • Automatic refresh and connection-loss status
+  • Vibration warning while the remote page is open and a new alert appears
+
+SECURITY
+
+  • Same private/local network only
+  • Six-digit operator PIN
+  • Time-limited authenticated phone session
+  • CSRF protection for every state-changing command
+  • Login attempt throttling
+  • Existing laptop-only dashboard remains laptop-only
+
+ALSO INCLUDED
+
+  • Exact ARCOBALENO Windows icon supplied by Arkov
+  • Windows shortcut and EXE build helpers
+  • Existing v1.1 blank event form, archived-event reopening, and six themes
+
+PREVIEW NOTE
+
+This Linux packaging workspace cannot execute the Windows BAT/EXE launcher. Test the
+portable source launcher and mobile remote on the event laptop before live-event use.
+Actual background push notifications are not included because local HTTP pages cannot
+reliably deliver phone notifications after the browser is closed. The open remote page
+provides live visual alerts and supported-device vibration instead.

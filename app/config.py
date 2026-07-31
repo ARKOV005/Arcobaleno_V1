@@ -39,6 +39,11 @@ DEFAULT_CONFIG: dict[str, Any] = {
         "qr_box_size": 12,
         "qr_border_modules": 4,
     },
+    "remote": {
+        "enabled": True,
+        "session_hours": 12,
+        "poll_interval_seconds": 3,
+    },
     "logging": {
         "level": "INFO",
         "keep_days": 14,
@@ -71,6 +76,7 @@ def _validate(config: dict[str, Any]) -> None:
     camera = config["camera"]
     slideshow = config["slideshow"]
     access = config["access"]
+    remote = config["remote"]
     logging_config = config["logging"]
     safety = config["safety"]
 
@@ -121,6 +127,14 @@ def _validate(config: dict[str, Any]) -> None:
         raise ConfigurationError("access.qr_box_size must be from 4 to 24.")
     if not isinstance(qr_border_modules, int) or not 4 <= qr_border_modules <= 12:
         raise ConfigurationError("access.qr_border_modules must be from 4 to 12.")
+    if not isinstance(remote.get("enabled"), bool):
+        raise ConfigurationError("remote.enabled must be true or false.")
+    session_hours = remote.get("session_hours")
+    if not isinstance(session_hours, (int, float)) or not 0.25 <= session_hours <= 24:
+        raise ConfigurationError("remote.session_hours must be from 0.25 to 24.")
+    remote_poll = remote.get("poll_interval_seconds")
+    if not isinstance(remote_poll, (int, float)) or not 1 <= remote_poll <= 30:
+        raise ConfigurationError("remote.poll_interval_seconds must be from 1 to 30.")
     if not isinstance(launcher.get("open_browser"), bool):
         raise ConfigurationError("launcher.open_browser must be true or false.")
     delay = launcher.get("browser_delay_seconds")

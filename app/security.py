@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import hmac
+import ipaddress
 import secrets
+import time
 from datetime import timedelta
 from functools import wraps
 from pathlib import Path
@@ -18,6 +20,56 @@ def is_operator_request() -> bool:
 
     return str(request.remote_addr or "").casefold() in _LOOPBACK_ADDRESSES
 
+
+
+def is_local_network_request() -> bool:
+    """Return True for loopback, private, or link-local event-network clients."""
+
+    raw_address = str(request.remote_addr or "").strip()
+    if raw_address.casefold() in _LOOPBACK_ADDRESSES:
+        return True
+    try:
+        address = ipaddress.ip_address(raw_address)
+    except ValueError:
+        return False
+    return bool(address.is_loopback or address.is_private or address.is_link_local)
+
+
+def mark_remote_operator_authenticated(session_hours: float = 12.0) -> None:
+    lifetime_seconds = max(900, min(86400, int(float(session_hours) * 3600)))
+    session["_arcobaleno_remote_operator_until"] = int(time.time()) + lifetime_seconds
+    session.permanent = True
+
+
+def clear_remote_operator_authentication() -> None:
+    session.pop("_arcobaleno_remote_operator_until", None)
+
+
+def is_remote_operator_authenticated() -> bool:
+    if is_operator_request():
+        return True
+    if not is_local_network_request():
+        return False
+    try:
+        expires_at = int(session.get("_arcobaleno_remote_operator_until") or 0)
+    except (TypeError, ValueError):
+        expires_at = 0
+    if expires_at <= int(time.time()):
+        clear_remote_operator_authentication()
+        return False
+    return True
+
+
+def remote_operator_only(view: _VIEW) -> _VIEW:
+    """Allow the laptop or a PIN-authenticated client on the local event network."""
+
+    @wraps(view)
+    def wrapped(*args: Any, **kwargs: Any):
+        if not is_remote_operator_authenticated():
+            abort(403)
+        return view(*args, **kwargs)
+
+    return cast(_VIEW, wrapped)
 
 def operator_only(view: _VIEW) -> _VIEW:
     """Restrict operator controls to the laptop running ARCOBALENO."""

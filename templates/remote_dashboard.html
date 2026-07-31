@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+    <meta name="theme-color" content="#171719">
+    <title>{{ page_title }} · ARCOBALENO</title>
+    <link rel="icon" href="{{ url_for('static', filename='img/arcobaleno-app-icon.png') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='img/arcobaleno-app-icon.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/remote.css') }}">
+</head>
+<body class="remote-body">
+    <div
+        id="remote-app"
+        class="remote-app"
+        data-snapshot-url="{{ url_for('remote.remote_snapshot_api') }}"
+        data-control-url="{{ url_for('remote.remote_control_api') }}"
+        data-csrf-token="{{ csrf_token() }}"
+        data-poll-seconds="{{ poll_interval_seconds }}"
+    >
+        <header class="remote-topbar">
+            <div class="remote-brand">
+                <img src="{{ url_for('static', filename='img/arcobaleno-app-icon.png') }}" alt="">
+                <div><strong>ARCOBALENO</strong><span>Operator Remote</span></div>
+            </div>
+            <form method="post" action="{{ url_for('remote.remote_logout') }}">
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                <button class="remote-icon-button" type="submit" aria-label="Lock remote">Lock</button>
+            </form>
+        </header>
+
+        <main class="remote-main">
+            <section class="remote-event-card">
+                <div>
+                    <p class="remote-eyebrow">Current event</p>
+                    <h1 id="remote-event-title">Connecting…</h1>
+                    <p id="remote-event-detail">Reading the event laptop.</p>
+                </div>
+                <span id="remote-mode-pill" class="remote-pill">Offline</span>
+            </section>
+
+            <div id="remote-connection" class="remote-connection" role="status">
+                <span></span><strong>Connecting to server…</strong><small id="remote-updated"></small>
+            </div>
+
+            <section id="remote-alerts" class="remote-alert-stack" aria-live="polite"></section>
+
+            <section class="remote-metric-grid" aria-label="Live event statistics">
+                <article><span>Photos</span><strong id="remote-photo-count">—</strong><small id="remote-approved-count">— approved</small></article>
+                <article><span>Guests</span><strong id="remote-guest-count">—</strong><small>identified</small></article>
+                <article><span>Exhausted</span><strong id="remote-exhausted-count">—</strong><small>shot limits reached</small></article>
+                <article><span>Pending</span><strong id="remote-pending-count">—</strong><small>need review</small></article>
+            </section>
+
+            <section class="remote-panel">
+                <div class="remote-panel-heading"><div><p class="remote-eyebrow">Health</p><h2>Event system</h2></div><span id="remote-health-pill" class="remote-pill">Checking</span></div>
+                <div class="remote-health-list">
+                    <div><span>Server</span><strong id="health-server">—</strong></div>
+                    <div><span>Guest camera</span><strong id="health-camera">—</strong></div>
+                    <div><span>Display</span><strong id="health-display">—</strong></div>
+                    <div><span>Storage</span><strong id="health-storage">—</strong></div>
+                </div>
+            </section>
+
+            <section class="remote-panel">
+                <div class="remote-panel-heading"><div><p class="remote-eyebrow">Event control</p><h2>Live mode</h2></div></div>
+                <div class="remote-action-grid remote-action-grid-two">
+                    <button data-action="event-live" class="remote-action remote-action-primary"><span>▶</span><strong>Start live</strong><small>Uploads and slideshow</small></button>
+                    <button data-action="event-setup" class="remote-action"><span>■</span><strong>Setup mode</strong><small>Pause and show logo</small></button>
+                </div>
+            </section>
+
+            <section class="remote-panel">
+                <div class="remote-panel-heading"><div><p class="remote-eyebrow">Guest camera</p><h2>Uploads</h2></div><span id="remote-upload-pill" class="remote-pill">—</span></div>
+                <div class="remote-action-grid remote-action-grid-two">
+                    <button data-action="uploads-open" class="remote-action remote-action-primary"><span>↑</span><strong>Resume</strong><small>Accept guest photos</small></button>
+                    <button data-action="uploads-pause" class="remote-action"><span>Ⅱ</span><strong>Pause</strong><small>Temporarily stop uploads</small></button>
+                </div>
+            </section>
+
+            <section class="remote-panel">
+                <div class="remote-panel-heading"><div><p class="remote-eyebrow">Projector</p><h2>Slideshow</h2></div><span id="remote-display-pill" class="remote-pill">—</span></div>
+                <div class="remote-action-grid remote-action-grid-four">
+                    <button data-action="slideshow-playing" class="remote-action"><span>▶</span><strong>Play</strong></button>
+                    <button data-action="slideshow-paused" class="remote-action"><span>Ⅱ</span><strong>Pause</strong></button>
+                    <button data-action="slideshow-logo" class="remote-action"><span>◉</span><strong>Logo</strong></button>
+                    <button data-action="slideshow-black" class="remote-action"><span>●</span><strong>Black</strong></button>
+                </div>
+                <div class="remote-action-grid remote-action-grid-three remote-action-row-gap">
+                    <button data-action="slideshow-previous" class="remote-action remote-action-compact"><strong>← Previous</strong></button>
+                    <button data-action="slideshow-restart" class="remote-action remote-action-compact"><strong>Restart</strong></button>
+                    <button data-action="slideshow-next" class="remote-action remote-action-compact"><strong>Next →</strong></button>
+                </div>
+            </section>
+
+            <section class="remote-panel" id="remote-latest-panel" hidden>
+                <div class="remote-panel-heading"><div><p class="remote-eyebrow">Latest upload</p><h2 id="remote-latest-name">Guest</h2></div><span id="remote-latest-time" class="remote-pill">—</span></div>
+                <img id="remote-latest-image" class="remote-latest-image" alt="Latest guest upload">
+                <div class="remote-action-grid remote-action-grid-three remote-action-row-gap">
+                    <button id="remote-latest-approve" data-action="photo-approve" class="remote-action remote-action-compact"><strong>Approve</strong></button>
+                    <button id="remote-latest-favorite" data-action="photo-favorite" class="remote-action remote-action-compact"><strong>Favorite</strong></button>
+                    <button id="remote-latest-hide" data-action="photo-hide" data-confirm="Hide this latest photo from the slideshow?" class="remote-action remote-action-compact"><strong>Hide</strong></button>
+                </div>
+            </section>
+
+            <section class="remote-panel">
+                <div class="remote-panel-heading"><div><p class="remote-eyebrow">Guest limits</p><h2>Shot allowance</h2></div></div>
+                <button data-action="reset-allowances" data-confirm="Give every known guest device a fresh full allowance? Existing photos will remain." class="remote-wide-button">Reset all guest allowances</button>
+            </section>
+
+            <section class="remote-panel remote-danger-panel">
+                <div class="remote-panel-heading"><div><p class="remote-eyebrow">Finish event</p><h2>Archive safely</h2></div></div>
+                <p>Moves the active event, photos, and history into Completed Events.</p>
+                <button id="remote-archive-open" class="remote-wide-button remote-danger-button">Archive current event</button>
+                <div id="remote-archive-confirm" class="remote-archive-confirm" hidden>
+                    <label for="remote-archive-word">Type <strong>ARCHIVE</strong> to confirm</label>
+                    <input id="remote-archive-word" autocomplete="off" autocapitalize="characters">
+                    <div class="remote-inline-actions">
+                        <button id="remote-archive-cancel" class="remote-wide-button">Cancel</button>
+                        <button data-action="archive-event" id="remote-archive-submit" class="remote-wide-button remote-danger-button">Archive now</button>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <div id="remote-toast" class="remote-toast" role="status" aria-live="polite"></div>
+    </div>
+    <script src="{{ url_for('static', filename='js/remote.js') }}" defer></script>
+</body>
+</html>

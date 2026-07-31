@@ -16,12 +16,12 @@ VSVersionInfo(
         [
           StringStruct('CompanyName', 'ARCOBALENO'),
           StringStruct('FileDescription', 'ARCOBALENO Portable Event Photo Experience'),
-          StringStruct('FileVersion', '1.1.0.1'),
+          StringStruct('FileVersion', '1.2.0.1'),
           StringStruct('InternalName', 'ARCOBALENO'),
           StringStruct('LegalCopyright', 'ARCOBALENO'),
           StringStruct('OriginalFilename', 'ARCOBALENO.exe'),
           StringStruct('ProductName', 'ARCOBALENO'),
-          StringStruct('ProductVersion', '1.1.0-preview1')
+          StringStruct('ProductVersion', '1.2.0-preview1')
         ]
       )
     ]),

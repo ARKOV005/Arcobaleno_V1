@@ -21,6 +21,8 @@ from app.live_service import LiveEventService
 from app.timeline_service import TimelineService
 from app.production import production_blueprint
 from app.recovery_service import RecoveryService
+from app.remote import remote_blueprint
+from app.remote_access_service import RemoteAccessService
 from app.runtime_control_service import RuntimeControlService
 from app.readiness_service import ReadinessService
 from app.settings_service import SettingsService
@@ -79,6 +81,7 @@ def create_app(
     slideshow_url = f"{operator_url}/slideshow"
     network_slideshow_url = f"{network_url}/slideshow"
     access_url = f"{operator_url}/access"
+    remote_url = f"{network_url}/remote"
 
     runtime_path_text = str(runtime_root).casefold()
     if "programdata" in runtime_path_text or "\\programdata\\" in runtime_path_text:
@@ -103,6 +106,8 @@ def create_app(
         ARCOBALENO_SLIDESHOW_URL=slideshow_url,
         ARCOBALENO_NETWORK_SLIDESHOW_URL=network_slideshow_url,
         ARCOBALENO_ACCESS_URL=access_url,
+        ARCOBALENO_REMOTE_URL=remote_url,
+        ARCOBALENO_VERSION=__version__,
         JSON_SORT_KEYS=False,
         MAX_CONTENT_LENGTH=max_upload_bytes + (1024 * 1024),
     )
@@ -124,6 +129,10 @@ def create_app(
     archive_service = ArchiveService(runtime_root=runtime_root)
     settings_service = SettingsService(project_root=runtime_root, config=config)
     recovery_service = RecoveryService(runtime_root=runtime_root)
+    remote_access_service = RemoteAccessService(
+        runtime_root=runtime_root,
+        enabled_by_default=bool(config["remote"].get("enabled", True)),
+    )
     event_control_service = EventControlService(runtime_root=runtime_root)
     live_event_service = LiveEventService()
     timeline_service = TimelineService(runtime_root=runtime_root)
@@ -139,6 +148,7 @@ def create_app(
     application.extensions["arcobaleno_archive_service"] = archive_service
     application.extensions["arcobaleno_settings_service"] = settings_service
     application.extensions["arcobaleno_recovery_service"] = recovery_service
+    application.extensions["arcobaleno_remote_access_service"] = remote_access_service
     application.extensions["arcobaleno_event_control_service"] = event_control_service
     application.extensions["arcobaleno_live_event_service"] = live_event_service
     application.extensions["arcobaleno_timeline_service"] = timeline_service
@@ -152,6 +162,7 @@ def create_app(
     application.register_blueprint(access_blueprint)
     application.register_blueprint(admin_blueprint)
     application.register_blueprint(production_blueprint)
+    application.register_blueprint(remote_blueprint)
     application.add_template_filter(_pretty_date, "pretty_date")
 
     @application.template_filter("filesize")
@@ -184,6 +195,7 @@ def create_app(
             "slideshow_url": slideshow_url,
             "network_slideshow_url": network_slideshow_url,
             "access_url": access_url,
+            "remote_url": remote_url,
             "preferred_ip": preferred_ip,
             "network_candidates": network_selection.candidates,
             "network_preferred_matches": not preferred_ip or network_selection.preferred_available,
@@ -247,6 +259,7 @@ def create_app(
                 "slideshow_url": slideshow_url,
                 "network_slideshow_url": network_slideshow_url,
                 "access_url": access_url,
+            "remote_url": remote_url,
                 "preferred_ip": preferred_ip,
                 "network_candidates": network_selection.candidates,
                 "active_event": active_event,

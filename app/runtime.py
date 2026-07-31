@@ -155,6 +155,11 @@ def run(bundle_root: Path, runtime_root: Path | None = None) -> int:
 
     application = create_app(bundle_root, config, runtime_root)
     runtime_control = application.extensions["arcobaleno_runtime_control_service"]
+    remote_settings = application.extensions["arcobaleno_remote_access_service"].get()
+    if remote_settings.get("enabled"):
+        print(f"Operator Remote: {network_url}/remote")
+        print(f"Remote PIN     : {remote_settings.get('pin')}")
+        print()
 
     def schedule_safe_shutdown() -> None:
         def interrupt_server() -> None:

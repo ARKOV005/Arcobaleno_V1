@@ -43,6 +43,9 @@ _NOTICE_MESSAGES = {
     "setup-restored": "ARCOBALENO returned to Setup Mode.",
     "moderation-saved": "Photo moderation settings saved.",
     "reopened": "Archived event reopened in Setup Mode. Its photos and event history are ready.",
+    "remote-pin-reset": "A new six-digit Operator Remote PIN is ready.",
+    "remote-enabled": "Operator Remote enabled for this event network.",
+    "remote-disabled": "Operator Remote disabled.",
 }
 
 _ARCHIVE_NOTICE_MESSAGES = {
@@ -197,6 +200,9 @@ def home():
 
     notice = _NOTICE_MESSAGES.get(request.args.get("notice", ""))
     metrics = _dashboard_metrics(active_event)
+    remote_access = current_app.extensions["arcobaleno_remote_access_service"].operator_status(
+        str(current_app.config["ARCOBALENO_REMOTE_URL"])
+    )
     recovery_attention = _server_state_service().recovery_attention(
         str(active_event.get("id") or "") if active_event else None
     )
@@ -206,6 +212,7 @@ def home():
         archive_count=service.count_archived_events(),
         notice=notice,
         recovery_attention=recovery_attention,
+        remote_access=remote_access,
         page_title="Operator dashboard",
         **metrics,
     )

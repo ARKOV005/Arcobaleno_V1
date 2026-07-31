@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+    <meta name="theme-color" content="#171719">
+    <title>{{ page_title }} · ARCOBALENO</title>
+    <link rel="icon" href="{{ url_for('static', filename='img/arcobaleno-app-icon.png') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='img/arcobaleno-app-icon.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/remote.css') }}">
+</head>
+<body class="remote-body remote-login-body">
+    <main class="remote-login-shell">
+        <section class="remote-login-card">
+            <img class="remote-app-icon" src="{{ url_for('static', filename='img/arcobaleno-app-icon.png') }}" alt="">
+            <p class="remote-eyebrow">Same-network control</p>
+            <h1>Operator Remote</h1>
+            <p class="remote-lead">Enter the six-digit PIN shown on the ARCOBALENO laptop.</p>
+
+            {% if error %}<div class="remote-alert remote-alert-danger" role="alert">{{ error }}</div>{% endif %}
+
+            {% if remote_enabled %}
+                <form method="post" action="{{ url_for('remote.remote_login_submit') }}" class="remote-pin-form">
+                    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                    <label for="pin">Operator PIN</label>
+                    <input id="pin" name="pin" type="text" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" placeholder="000000" autofocus required>
+                    <button type="submit">Unlock remote</button>
+                </form>
+            {% endif %}
+            <p class="remote-security-note">This page works only while your phone is connected to the event network.</p>
+        </section>
+    </main>
+</body>
+</html>

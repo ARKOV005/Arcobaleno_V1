@@ -1,0 +1,48 @@
+{
+  "application": {
+    "name": "ARCOBALENO",
+    "environment": "production"
+  },
+  "server": {
+    "host": "0.0.0.0",
+    "port": 5000,
+    "preferred_ip": "192.168.0.106",
+    "threads": 8
+  },
+  "launcher": {
+    "open_browser": true,
+    "browser_delay_seconds": 0.5
+  },
+  "camera": {
+    "photo_limit_per_device": 7,
+    "max_upload_megabytes": 60
+  },
+  "slideshow": {
+    "seconds_per_photo": 5.0,
+    "poll_interval_seconds": 2.0,
+    "show_guest_name": true,
+    "show_timestamp": true
+  },
+  "access": {
+    "wifi_ssid": "ARCOBALENO",
+    "wifi_security": "WPA",
+    "wifi_password": "",
+    "wifi_hidden": false,
+    "qr_box_size": 12,
+    "qr_border_modules": 4
+  },
+  "logging": {
+    "level": "INFO",
+    "keep_days": 14
+  },
+  "safety": {
+    "warning_free_gigabytes": 5,
+    "critical_free_gigabytes": 1,
+    "upload_reserve_megabytes": 512
+  },
+  "remote": {
+    "enabled": true,
+    "session_hours": 12,
+    "poll_interval_seconds": 3
+  }
+}

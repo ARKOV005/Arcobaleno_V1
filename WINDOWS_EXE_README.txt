@@ -35,7 +35,7 @@ Double-click BUILD_WINDOWS_EXE.bat.
 The first build downloads PyInstaller and may take several minutes. Output:
 
   dist\ARCOBALENO\ARCOBALENO.exe
-  dist\ARCOBALENO-Windows-v1.1.0-preview1.zip
+  dist\ARCOBALENO-Windows-v1.2.0-preview1.zip
 
 The result is a one-folder portable build. Keep the entire ARCOBALENO folder;
 do not move only the EXE away from its _internal folder.

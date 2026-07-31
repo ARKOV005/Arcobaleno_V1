@@ -1,5 +1,37 @@
-# Windows build output
+# Python environment and cache
+.venv/
 .build-venv/
+__pycache__/
+*.py[cod]
+
+# Private and machine-specific runtime settings
+config.json
+.arcobaleno_secret
+operator_remote.json
+.first_run_pending
+.env
+.env.*
+
+# Runtime event data
+events/current/*
+!events/current/.gitkeep
+events/archive/*
+!events/archive/.gitkeep
+events/trash/*
+!events/trash/.gitkeep
+logs/*
+!logs/.gitkeep
+backups/*
+!backups/.gitkeep
+exports/*
+!exports/.gitkeep
+
+# Windows build output
 build/
 dist/
 *.exe
+
+# Release archives and OS files
+*.zip
+Thumbs.db
+.DS_Store

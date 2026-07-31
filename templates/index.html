@@ -169,6 +169,34 @@
                 </div>
             </section>
 
+            <section class="operator-remote-card" aria-labelledby="operator-remote-title">
+                <div class="operator-remote-copy">
+                    <p class="eyebrow">Phone companion</p>
+                    <h2 id="operator-remote-title">Operator Remote</h2>
+                    <p>Control the live event from a phone connected to the same Wi-Fi. Scan the code, then enter the six-digit PIN.</p>
+                    <div class="operator-remote-credentials">
+                        <div><span>Address</span><code>{{ remote_access.url }}</code></div>
+                        <div><span>PIN</span><strong>{{ remote_access.pin }}</strong></div>
+                        <div><span>Status</span><b class="{% if remote_access.enabled %}is-enabled{% else %}is-disabled{% endif %}">{{ 'Enabled' if remote_access.enabled else 'Disabled' }}</b></div>
+                    </div>
+                    <div class="operator-remote-actions">
+                        <form method="post" action="{{ url_for('remote.operator_remote_reset_pin') }}" data-confirm="Generate a new Operator Remote PIN? Phones using the old PIN will need to sign in again after their session expires.">
+                            <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                            <button class="button button-secondary" type="submit">Reset PIN</button>
+                        </form>
+                        <form method="post" action="{{ url_for('remote.operator_remote_toggle') }}">
+                            <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                            <input type="hidden" name="enabled" value="{{ 'false' if remote_access.enabled else 'true' }}">
+                            <button class="button {% if remote_access.enabled %}button-quiet-danger{% else %}button-primary{% endif %}" type="submit">{{ 'Disable remote' if remote_access.enabled else 'Enable remote' }}</button>
+                        </form>
+                    </div>
+                </div>
+                <div class="operator-remote-qr">
+                    <img src="{{ url_for('remote.operator_remote_qr') }}" alt="QR code for Operator Remote">
+                    <small>Same event Wi-Fi only</small>
+                </div>
+            </section>
+
             <section class="dashboard-destinations" aria-label="Event workspaces">
                 <a class="destination-card destination-card-primary" href="{{ url_for('events.photo_library') }}">
                     <span class="destination-icon" aria-hidden="true">▦</span>

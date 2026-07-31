@@ -6,7 +6,7 @@ cd /d "%~dp0"
 set "BUILD_VENV=.build-venv"
 set "BUILD_PYTHON=%BUILD_VENV%\Scripts\python.exe"
 set "OUTPUT_DIR=dist\ARCOBALENO"
-set "OUTPUT_ZIP=dist\ARCOBALENO-Windows-v1.1.0-preview1.zip"
+set "OUTPUT_ZIP=dist\ARCOBALENO-Windows-v1.2.0-preview1.zip"
 
 echo.
 echo ================================================================

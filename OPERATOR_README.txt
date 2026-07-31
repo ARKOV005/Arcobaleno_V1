@@ -1,53 +1,36 @@
-ARCOBALENO 1.1.0 — PREVIEW 1
+ARCOBALENO 1.2.0 — PREVIEW 1
 Portable Event Photo Experience
 
 START
-  1. Extract the entire ARCOBALENO_v1.1.0_PREVIEW1 folder.
-  2. Keep the folder on the server laptop's local drive.
-  3. Double-click START_ARCOBALENO.bat.
-  4. Wait for the operator dashboard to open in the browser.
 
-CREATE AN EVENT
-  - The form intentionally opens blank.
-  - Enter the title and date, then choose a Guest Experience Theme.
-  - Themes appear only on the Guest Camera and Slideshow Display.
-  - Default keeps the original ARCOBALENO rose-and-sage appearance.
+  1. Extract the complete ARCOBALENO_v1.2.0_PREVIEW1 folder.
+  2. Double-click START_ARCOBALENO.bat.
+  3. Keep the black server window open during the event.
+  4. Use the laptop dashboard for full setup and moderation.
 
-REOPEN AN ARCHIVED EVENT
-  1. Make sure no event is currently active.
-  2. Open Events, then choose Reopen event beside the archived event.
-  3. Confirm the event details, QR access, photos, and display.
-  4. The event returns in Setup Mode with uploads paused.
-  5. Press Start Live Event when the equipment and venue are ready.
+OPERATOR REMOTE
 
-  Reopening preserves the event workspace, including photos, guest shot
-  records, timeline, settings, and history. Old live controls are retained
-  for history but are never resumed automatically.
+  1. Connect the phone to the same event Wi-Fi as the ARCOBALENO laptop.
+  2. On the laptop dashboard, find the Operator Remote card.
+  3. Scan its QR code or open the displayed address.
+  4. Enter the displayed six-digit PIN.
 
-STOP SAFELY
-  Open Server behavior in ARCOBALENO, then choose Shut down ARCOBALENO.
-  Do not close the terminal window while an upload or backup is in progress.
+The remote controls live/setup mode, uploads, slideshow state and navigation, guest
+allowance resets, and safe event archiving. It also shows current event health and counts.
 
-EVENT CHECK
-  - Confirm System status shows Healthy.
-  - Confirm Guest Camera shows the selected theme and expected upload state.
-  - Confirm the slideshow uses the same selected theme.
-  - Confirm the event Wi-Fi and camera QR codes use the correct local IP.
-  - Take one test photo before guests arrive.
-  - Confirm the photo appears in Live Photos and the slideshow.
+SECURITY
 
-IMPORTANT
-  - Keep ARCOBALENO 1.0.0 Official Stable untouched as the rollback build.
-  - Do not move, rename, or delete files while ARCOBALENO is running.
-  - Do not manually delete the events, backups, logs, fonts, or .venv folders.
-  - Keep at least 5 GB of free space on the server drive when possible.
-  - Use the built-in archive, backup, recovery, and shutdown controls.
+The full desktop operator interface remains restricted to the laptop. The mobile remote
+works only on private/local network addresses and requires the operator PIN. Reset the PIN
+from the laptop when needed, or disable Operator Remote completely.
 
-RECOVERY
-  If startup fails, read logs\bootstrap-errors.log.
-  If an event is interrupted, reopen ARCOBALENO and follow the recovery prompt.
+WINDOWS ICON / EXE
 
-VERSION
-  ARCOBALENO 1.1.0 Preview 1
-  Stable base: ARCOBALENO 1.0.0 Official Stable
-  Release date: July 31, 2026
+  • CREATE_ARCOBALENO_SHORTCUT.bat creates an iconed desktop shortcut.
+  • BUILD_WINDOWS_EXE.bat builds dist\ARCOBALENO\ARCOBALENO.exe on Windows.
+  • Keep the entire generated dist\ARCOBALENO folder together.
+
+ROLLBACK
+
+Keep ARCOBALENO 1.0.0 Official Stable and your accepted 1.1 preview package untouched.
+Use this preview from a separate folder until phone testing passes.

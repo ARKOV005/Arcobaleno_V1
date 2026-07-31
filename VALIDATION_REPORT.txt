@@ -1,0 +1,29 @@
+ARCOBALENO 1.2.0 Preview 1 — Validation Report
+Date: August 1, 2026
+
+PASSED
+
+  • Python source compilation
+  • Flask application creation with clean temporary runtime storage
+  • Laptop dashboard rendering with Operator Remote QR/PIN card
+  • Local-network PIN login and authenticated session
+  • Rejection of public/non-local client addresses
+  • Rejection of unauthenticated private-network API requests
+  • Mobile dashboard rendering and snapshot API
+  • Live Event / Setup Mode switching
+  • Guest upload resume and pause controls
+  • Slideshow play, pause, logo, black, next, previous, and restart controls
+  • Latest-photo Approve, Hide, Favorite, and Unfavorite controls
+  • Guest shot-allowance reset without photo deletion
+  • Safe archive with typed ARCHIVE confirmation
+  • Remote PIN reset
+  • Remote disable switch blocking an already-authenticated phone
+  • Operator Remote QR generation
+  • JavaScript syntax validation with Node.js
+  • Exact ICO parity with the icon supplied by Arkov
+  • ZIP integrity validation
+
+PLATFORM LIMITATION
+
+The Windows BAT launcher and PyInstaller EXE cannot be executed in this Linux packaging
+workspace. Run the included Windows smoke test on the event laptop before live-event use.
