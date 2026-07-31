@@ -1,0 +1,5 @@
+# Windows build output
+.build-venv/
+build/
+dist/
+*.exe

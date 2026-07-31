@@ -1,0 +1,76 @@
+name: Build Windows EXE
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-build.txt
+
+      - name: Install dependencies
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt -r requirements-build.txt
+
+      - name: Build ARCOBALENO.exe
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          python -m PyInstaller --clean --noconfirm ARCOBALENO.spec
+
+          $out = "dist\ARCOBALENO"
+          if (Test-Path "config.example.json") {
+            Copy-Item "config.example.json" "$out\config.json" -Force
+          } elseif (Test-Path "config.json") {
+            Copy-Item "config.json" "$out\config.json" -Force
+          }
+
+          if (Test-Path "LICENSE.txt") {
+            Copy-Item "LICENSE.txt" "$out\LICENSE.txt" -Force
+          }
+          if (Test-Path "OPERATOR_README.txt") {
+            Copy-Item "OPERATOR_README.txt" "$out\OPERATOR_README.txt" -Force
+          }
+
+          Copy-Item "assets\ARCOBALENO.ico" "$out\ARCOBALENO.ico" -Force
+          Copy-Item "assets\ARCOBALENO.png" "$out\ARCOBALENO.png" -Force
+          New-Item "$out\.first_run_pending" -ItemType File -Force | Out-Null
+
+          @'
+          @echo off
+          cd /d "%~dp0"
+          ARCOBALENO.exe
+          if errorlevel 1 pause
+          '@ | Set-Content "$out\START_ARCOBALENO.bat" -Encoding ASCII
+
+          $artifact = "ARCOBALENO-Windows-$env:GITHUB_REF_NAME.zip"
+          Compress-Archive -Path "$out\*" -DestinationPath $artifact -Force
+          "ARTIFACT_NAME=$artifact" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: Upload Windows build
+        uses: actions/upload-artifact@v4
+        with:
+          name: ARCOBALENO-Windows-${{ github.ref_name }}
+          path: ${{ env.ARTIFACT_NAME }}
+          if-no-files-found: error
+          retention-days: 30
