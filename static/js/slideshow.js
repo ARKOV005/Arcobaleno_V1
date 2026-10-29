@@ -47,6 +47,7 @@
     const fullscreenGate = document.getElementById("fullscreen-gate");
     const productionScreens = Array.from(document.querySelectorAll(".production-screen"));
     const logoScreen = document.getElementById("production-logo-screen");
+    const instructionsScreen = document.getElementById("production-instructions-screen");
     const blackScreen = document.getElementById("production-black-screen");
     const emergencyScreen = document.getElementById("production-emergency-screen");
     const timelineScreen = document.getElementById("production-timeline-screen");
@@ -341,7 +342,9 @@
             playing = false;
             clearAdvanceTimer();
             app.classList.add("production-screen-active");
-            if (productionState === "black") {
+            if (productionState === "instructions") {
+                instructionsScreen.hidden = false;
+            } else if (productionState === "black") {
                 blackScreen.hidden = false;
                 document.getElementById("hold-screen-message").textContent = control.slideshow_message || "Please enjoy this special moment.";
             } else if (productionState === "emergency") {
