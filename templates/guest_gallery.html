@@ -6,26 +6,50 @@
 <meta name="theme-color" content="#17252b">
 <title>{{ active_event.title }} | Photo Gallery</title>
 <style>
-:root{font-family:system-ui,-apple-system,Segoe UI,sans-serif;color-scheme:dark}
-*{box-sizing:border-box}body{margin:0;background:#111d23;color:#f7f5f0}
+:root{font-family:system-ui,-apple-system,Segoe UI,sans-serif;color-scheme:light;--bg:#faf5f0;--fg:#34312e;--muted:#655e59;--card:#fff8f0;--accent:#6a5f7f;--accent-text:#fff}
+body.theme-floral{--bg:#fff3f4;--fg:#543d49;--muted:#7d586c;--card:#ffe3ec;--accent:#a44a71}
+body.theme-secret-garden{--bg:#eaf0e5;--fg:#1e382e;--muted:#496454;--card:#f7fbf3;--accent:#305a45}
+body.theme-ocean{--bg:#e8f7f8;--fg:#214c56;--muted:#416e7b;--card:#f8ffff;--accent:#247e8a}
+body.theme-ballroom{--bg:#fcf4e6;--fg:#4b3927;--muted:#77634a;--card:#fffaf2;--accent:#876342}
+body.theme-disco{--bg:#201e3d;--fg:#f6f2ff;--muted:#c8c0eb;--card:#322b58;--accent:#be85ef}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg)}
 header{padding:20px 18px 12px;max-width:1080px;margin:auto}
-h1{font-size:clamp(24px,5vw,40px);margin:8px 0}p{color:#aec0c6}
+h1{font-size:clamp(24px,5vw,40px);margin:8px 0}p{color:var(--muted)}
 nav{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0}
-a{color:inherit;text-decoration:none}.tab,.back{display:inline-block;padding:12px 18px;border:1px solid #536c73;border-radius:12px;font-weight:650}
-.tab[aria-current="page"]{background:#d9b976;color:#17252b;border-color:#d9b976}
+a{color:inherit;text-decoration:none}.tab,.back{display:inline-block;padding:12px 18px;border:1px solid var(--accent);border-radius:12px;font-weight:650}
+.tab[aria-current="page"]{background:var(--accent);color:var(--accent-text);border-color:var(--accent)}
 main{max-width:1080px;margin:auto;padding:0 18px 30px}
 .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 @media(min-width:650px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(min-width:920px){.grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
-figure{margin:0;border:1px solid #36515b;background:#20333c;border-radius:14px;overflow:hidden}
+figure{margin:0;border:1px solid var(--accent);background:var(--card);border-radius:14px;overflow:hidden}
 figure img{width:100%;aspect-ratio:1/1;object-fit:cover;display:block}
 figcaption{padding:9px 11px;font-size:13px;overflow-wrap:anywhere}
-figcaption small{display:block;color:#aac1ca;margin-top:4px}
-.empty{padding:36px 20px;text-align:center;border:1px dashed #57717b;border-radius:14px}
-.more{display:inline-block;margin-top:20px;padding:12px 18px;border-radius:10px;background:#d9b976;color:#17252b;font-weight:700}
+figcaption small{display:block;color:var(--muted);margin-top:4px}
+.empty{padding:36px 20px;text-align:center;border:1px dashed var(--accent);border-radius:14px}
+.more{display:inline-block;margin-top:20px;padding:12px 18px;border-radius:10px;background:var(--accent);color:var(--accent-text);font-weight:700}
+
+/* Full-viewport photo viewer: picture never cropped or covered by controls. */
+.viewer[hidden]{display:none!important}
+.viewer{position:fixed;inset:0;z-index:9999;background:#0b1015;color:white;display:flex;flex-direction:column;height:100dvh;overflow:hidden}
+.viewer-top,.viewer-bottom{flex:none;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px max(16px,env(safe-area-inset-right)) 12px max(16px,env(safe-area-inset-left));background:#0b1015}
+.viewer-top{padding-top:max(12px,env(safe-area-inset-top))}
+.viewer-bottom{padding-bottom:max(12px,env(safe-area-inset-bottom))}
+.viewer-photo{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;position:relative}
+.viewer-photo img{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain}
+.viewer-label{min-width:0;font-size:13px;line-height:1.4}
+.viewer-label strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:60vw}
+.viewer-brand{display:flex;align-items:center;gap:7px;font-size:11px;letter-spacing:.07em;white-space:nowrap}
+.viewer-brand img{height:23px;width:23px;object-fit:contain}
+.viewer-actions{display:flex;gap:10px;align-items:center}
+.viewer button{border:1px solid #82939e;background:#233440;color:#fff;border-radius:12px;padding:12px 15px;font-size:15px;font-weight:700;min-height:45px;cursor:pointer}
+.viewer button:disabled{opacity:.35}
+.viewer button:focus-visible,.grid a:focus-visible{outline:3px solid #e7c57b;outline-offset:2px}
+body.viewer-open{overflow:hidden}
+@media(max-width:390px){.viewer-brand span{display:none}.viewer button{padding:11px 13px}.viewer-label strong{max-width:48vw}}
 </style>
 </head>
-<body>
+<body class="theme-{{ active_event.theme or 'default' }}">
 <header>
 <a class="back" href="{{ url_for('camera.camera_page') }}">← Back to Camera</a>
 <h1>{{ active_event.title }} — Gallery</h1>
@@ -41,7 +65,7 @@ figcaption small{display:block;color:#aac1ca;margin-top:4px}
 <div class="grid">
 {% for photo in photos %}
 <figure>
-<a href="{{ url_for('slideshow.slideshow_photo', photo_id=photo.id) }}" target="_blank" rel="noopener" aria-label="View photo by {{ photo.guest_name }}">
+<a class="gallery-photo" href="{{ url_for('slideshow.slideshow_photo', photo_id=photo.id) }}" data-name="{{ photo.guest_name }}" aria-label="View photo by {{ photo.guest_name }}">
 <img loading="lazy" decoding="async" src="{{ url_for('camera.guest_gallery_thumbnail', photo_id=photo.id) }}" alt="Photo shared by {{ photo.guest_name }}">
 </a>
 <figcaption><strong>{{ photo.guest_name }}</strong><small>{{ photo.created_at[:16].replace('T',' ') }}</small></figcaption>
@@ -53,12 +77,83 @@ figcaption small{display:block;color:#aac1ca;margin-top:4px}
 {% endif %}
 {% if more %}<a class="more" href="{{ url_for('camera.guest_gallery_page', view=view, before=photos[-1].created_at) }}">Load older photos</a>{% endif %}
 </main>
+<div class="viewer" id="viewer" role="dialog" aria-modal="true" aria-label="Event photo viewer" hidden>
+  <div class="viewer-top">
+    <div class="viewer-label"><strong>{{ active_event.title }}</strong><span id="viewer-count"></span></div>
+    <div class="viewer-brand"><img src="{{ url_for('static', filename='img/arcobaleno-mark.svg') }}" alt=""><span>ARCOBALENO</span></div>
+  </div>
+  <div class="viewer-photo"><img id="viewer-image" alt=""></div>
+  <div class="viewer-bottom">
+    <button type="button" id="viewer-back" aria-label="Back to gallery">← Back</button>
+    <div class="viewer-label"><span>Shared by</span><strong id="viewer-name"></strong></div>
+    <div class="viewer-actions"><button type="button" id="viewer-prev" aria-label="Previous photo">‹</button><button type="button" id="viewer-next" aria-label="Next photo">›</button></div>
+  </div>
+</div>
 <script>
 (() => {
+  const links = Array.from(document.querySelectorAll(".gallery-photo"));
+  const viewer = document.getElementById("viewer");
+  const viewerImg = document.getElementById("viewer-image");
+  const name = document.getElementById("viewer-name");
+  const count = document.getElementById("viewer-count");
+  const prev = document.getElementById("viewer-prev");
+  const next = document.getElementById("viewer-next");
+  const back = document.getElementById("viewer-back");
+  let index = -1;
+  let lastFocus = null;
+  function show(i) {
+    if (i < 0 || i >= links.length) return;
+    index = i;
+    const link = links[i];
+    viewerImg.src = link.href;
+    name.textContent = link.dataset.name || "Guest";
+    viewerImg.alt = "Photo shared by " + name.textContent;
+    count.textContent = (i+1) + " / " + links.length;
+    prev.disabled = i === 0;
+    next.disabled = i === links.length-1;
+  }
+  function closeViewer() {
+    viewer.hidden = true;
+    document.body.classList.remove("viewer-open");
+    viewerImg.removeAttribute("src");
+    index = -1;
+    if (lastFocus) lastFocus.focus();
+  }
+  links.forEach((link,i) => link.addEventListener("click", event => {
+    event.preventDefault();
+    lastFocus = link;
+    viewer.hidden = false;
+    document.body.classList.add("viewer-open");
+    show(i);
+    back.focus();
+  }));
+  back.addEventListener("click", closeViewer);
+  prev.addEventListener("click", () => show(index-1));
+  next.addEventListener("click", () => show(index+1));
+  document.addEventListener("keydown", event => {
+    if (viewer.hidden) return;
+    if (event.key === "Escape") closeViewer();
+    else if (event.key === "ArrowLeft") show(index-1);
+    else if (event.key === "ArrowRight") show(index+1);
+    else if (event.key === "Tab") {
+      const controls = [back,prev,next].filter(el => !el.disabled);
+      const first = controls[0], last = controls[controls.length-1];
+      if (event.shiftKey && document.activeElement === first) {event.preventDefault();last.focus();}
+      else if (!event.shiftKey && document.activeElement === last) {event.preventDefault();first.focus();}
+    }
+  });
+  let swipeX = null;
+  viewerImg.addEventListener("touchstart", e => {swipeX = e.changedTouches[0].clientX;}, {passive:true});
+  viewerImg.addEventListener("touchend", e => {
+    if (swipeX === null) return;
+    const d = e.changedTouches[0].clientX - swipeX;
+    if (Math.abs(d) > 65) show(index + (d < 0 ? 1 : -1));
+    swipeX = null;
+  }, {passive:true});
   let idle = true;
   document.addEventListener("visibilitychange", () => { idle = !document.hidden; });
   setInterval(() => {
-    if (!idle || document.hidden || new URLSearchParams(location.search).has("before")) return;
+    if (!idle || !viewer.hidden || document.hidden || new URLSearchParams(location.search).has("before")) return;
     location.reload();
   }, 20000);
 })();
