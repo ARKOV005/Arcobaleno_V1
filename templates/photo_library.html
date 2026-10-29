@@ -73,10 +73,6 @@
                             <span><strong>Emergency</strong><small>Safe screen now</small></span>
                         </button>
 
-                        <button class="console-action" id="joining-instructions-button" type="button">
-                            <span class="console-action-icon" aria-hidden="true">?</span>
-                            <span><strong>Joining Instructions</strong><small>Show on all displays</small></span>
-                        </button>
                         <details class="console-more" id="console-more">
                             <summary class="console-action console-action-more">
                                 <span class="console-action-icon" aria-hidden="true">•••</span>
@@ -107,6 +103,13 @@
                                 </nav>
                             </div>
                         </details>
+                    </div>
+                    <div class="event-instruction-toolbar">
+                       <div><p class="event-console-section-label">Guest instructions</p><strong id="guest-instruction-status">On · Every 3 min · 10s/page · 30s total</strong><small> Countdown starts with the slideshow · Show now still works</small></div>
+                       <button type="button" class="button button-primary button-small" id="guest-instructions-show">Show now</button>
+                       <button type="button" class="button button-secondary button-small" id="guest-instructions-skip">Skip</button>
+                       <button type="button" class="button button-secondary button-small" id="guest-instructions-toggle">Turn off</button>
+                       <button type="button" class="button button-secondary button-small" id="guest-event-intro">Event intro</button>
                     </div>
                 </section>
             </div>
