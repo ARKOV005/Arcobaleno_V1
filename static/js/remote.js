@@ -8,6 +8,8 @@
     const pollMs = Math.max(1000, Number(app.dataset.pollSeconds || 3) * 1000);
     const $ = (id) => document.getElementById(id);
     let busy = false;
+    let photoCursor = "";
+    let photoBrowserOpen = false;
     let lastAlertSignature = "";
     let timer = null;
 
@@ -48,7 +50,9 @@
             setPill($("remote-mode-pill"), "Idle"); disableActions(true); renderAlerts([]); return;
         }
         disableActions(false);
-        const event = data.event || {}; const control = data.control || {}; const counts = data.counts || {}; const displays = data.displays || {}; const storage = data.storage || {}; const allowance = data.allowance || {};
+        const event = data.event || {}; const control = data.control || {};
+        const downloadPill = $("remote-download-pill");
+        if (downloadPill) downloadPill.textContent = control.guest_downloads_enabled ? "Enabled" : "Off"; const counts = data.counts || {}; const displays = data.displays || {}; const storage = data.storage || {}; const allowance = data.allowance || {};
         $("remote-event-title").textContent = event.title || "Current event";
         $("remote-event-detail").textContent = [event.hosts, event.event_date, event.venue].filter(Boolean).join(" · ") || "Event workspace active";
         setPill($("remote-mode-pill"), control.event_mode === "live" ? "● Live" : "Setup", control.event_mode === "live" ? "live" : "");
@@ -107,12 +111,61 @@
             const response = await fetch(controlUrl, {method:"POST", body:form, headers:{"X-CSRF-Token":csrf,"Accept":"application/json"}});
             const data = await response.json(); if (!response.ok) throw new Error(data.error || "Action failed.");
             render(data.snapshot || data); toast(action === "archive-event" ? "Event archived safely" : "Control updated");
+            if (action.startsWith("photo-") && photoBrowserOpen) loadPhotos(false);
             if (action === "archive-event") { $("remote-archive-confirm").hidden = true; $("remote-archive-word").value = ""; }
         } catch (error) { toast(error.message || "Action failed"); }
         finally { busy = false; button.classList.remove("is-busy"); disableActions(false); }
     };
 
-    document.querySelectorAll("[data-action]").forEach((button) => button.addEventListener("click", () => sendAction(button)));
+    // Event delegation also supports buttons added after the remote loads.
+    document.addEventListener("click", e => {
+      const actionButton = e.target.closest("[data-action]");
+      if (actionButton && app.contains(actionButton)) sendAction(actionButton);
+    });
+    async function loadPhotos(older = false) {
+      const grid = $("remote-photo-grid");
+      if (!older) { photoCursor = ""; grid.replaceChildren(); }
+      const url = new URL(app.dataset.photosUrl, location.href);
+      if (older && photoCursor) url.searchParams.set("before", photoCursor);
+      try {
+        const response = await fetch(url, {cache:"no-store"});
+        const data = await response.json();
+        if (!response.ok) throw Error(data.error || "Could not load photos");
+        data.photos.forEach(photo => {
+          const card = document.createElement("article");
+          card.style.cssText = "background:#ffffff10;border:1px solid #8884;border-radius:12px;padding:8px;min-width:0";
+          const img = document.createElement("img");
+          img.src = photo.thumbnail_url;
+          img.loading = "lazy";
+          img.alt = "Photo by " + photo.guest_name;
+          img.style.cssText = "width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:8px";
+          const label = document.createElement("p");
+          label.textContent = photo.guest_name + " · " + photo.moderation_status + (photo.favorite ? " ★" : "");
+          label.style.cssText = "font-size:12px;overflow-wrap:anywhere";
+          const actions = document.createElement("div");
+          actions.style.cssText = "display:flex;flex-wrap:wrap;gap:5px";
+          const choices = [
+            ["photo-approve","Show"],
+            [photo.favorite ? "photo-unfavorite" : "photo-favorite",photo.favorite ? "Unstar" : "★ Favorite"],
+            ["photo-hide","Hide"]
+          ];
+          choices.forEach(([action,title]) => {
+            const b = document.createElement("button");
+            b.type = "button"; b.dataset.action = action; b.dataset.photoId = photo.id;
+            b.textContent = title;
+            b.style.cssText = "padding:9px;border-radius:8px;min-height:40px;border:1px solid #8886;background:#fff;color:#222";
+            actions.append(b);
+          });
+          card.append(img,label,actions);
+          grid.append(card);
+        });
+        photoCursor = data.next_before || "";
+        $("remote-photo-more").hidden = !data.has_more;
+        photoBrowserOpen = true;
+      } catch (error) { toast(error.message || "Photo library unavailable"); }
+    }
+    $("remote-photo-load").addEventListener("click", () => loadPhotos(false));
+    $("remote-photo-more").addEventListener("click", () => loadPhotos(true));
     $("remote-archive-open").addEventListener("click", () => { $("remote-archive-confirm").hidden = false; $("remote-archive-word").focus(); });
     $("remote-archive-cancel").addEventListener("click", () => { $("remote-archive-confirm").hidden = true; $("remote-archive-word").value = ""; });
     refresh(); timer = window.setInterval(refresh, pollMs);
