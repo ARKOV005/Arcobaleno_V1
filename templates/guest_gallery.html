@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#17252b">
+<title>{{ active_event.title }} | Photo Gallery</title>
+<style>
+:root{font-family:system-ui,-apple-system,Segoe UI,sans-serif;color-scheme:dark}
+*{box-sizing:border-box}body{margin:0;background:#111d23;color:#f7f5f0}
+header{padding:20px 18px 12px;max-width:1080px;margin:auto}
+h1{font-size:clamp(24px,5vw,40px);margin:8px 0}p{color:#aec0c6}
+nav{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0}
+a{color:inherit;text-decoration:none}.tab,.back{display:inline-block;padding:12px 18px;border:1px solid #536c73;border-radius:12px;font-weight:650}
+.tab[aria-current="page"]{background:#d9b976;color:#17252b;border-color:#d9b976}
+main{max-width:1080px;margin:auto;padding:0 18px 30px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media(min-width:650px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(min-width:920px){.grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+figure{margin:0;border:1px solid #36515b;background:#20333c;border-radius:14px;overflow:hidden}
+figure img{width:100%;aspect-ratio:1/1;object-fit:cover;display:block}
+figcaption{padding:9px 11px;font-size:13px;overflow-wrap:anywhere}
+figcaption small{display:block;color:#aac1ca;margin-top:4px}
+.empty{padding:36px 20px;text-align:center;border:1px dashed #57717b;border-radius:14px}
+.more{display:inline-block;margin-top:20px;padding:12px 18px;border-radius:10px;background:#d9b976;color:#17252b;font-weight:700}
+</style>
+</head>
+<body>
+<header>
+<a class="back" href="{{ url_for('camera.camera_page') }}">← Back to Camera</a>
+<h1>{{ active_event.title }} — Gallery</h1>
+<p>Enjoy approved photos shared at this event. The gallery stays available even while uploads are paused.</p>
+<nav aria-label="Gallery filter">
+<a class="tab" {% if view == 'all' %}aria-current="page"{% endif %} href="{{ url_for('camera.guest_gallery_page', view='all') }}">All Photos</a>
+<a class="tab" {% if view == 'mine' %}aria-current="page"{% endif %} href="{{ url_for('camera.guest_gallery_page', view='mine') }}">My Photos</a>
+</nav>
+<p>{{ photos|length }} photo{% if photos|length != 1 %}s{% endif %}{% if more %} on this page{% endif %}</p>
+</header>
+<main>
+{% if photos %}
+<div class="grid">
+{% for photo in photos %}
+<figure>
+<a href="{{ url_for('slideshow.slideshow_photo', photo_id=photo.id) }}" target="_blank" rel="noopener" aria-label="View photo by {{ photo.guest_name }}">
+<img loading="lazy" decoding="async" src="{{ url_for('camera.guest_gallery_thumbnail', photo_id=photo.id) }}" alt="Photo shared by {{ photo.guest_name }}">
+</a>
+<figcaption><strong>{{ photo.guest_name }}</strong><small>{{ photo.created_at[:16].replace('T',' ') }}</small></figcaption>
+</figure>
+{% endfor %}
+</div>
+{% else %}
+<div class="empty">{% if view == 'mine' %}You haven't shared any approved photos from this device yet.{% else %}No approved event photos yet. Check back soon!{% endif %}</div>
+{% endif %}
+{% if more %}<a class="more" href="{{ url_for('camera.guest_gallery_page', view=view, before=photos[-1].created_at) }}">Load older photos</a>{% endif %}
+</main>
+<script>
+(() => {
+  let idle = true;
+  document.addEventListener("visibilitychange", () => { idle = !document.hidden; });
+  setInterval(() => {
+    if (!idle || document.hidden || new URLSearchParams(location.search).has("before")) return;
+    location.reload();
+  }, 20000);
+})();
+</script>
+</body>
+</html>
