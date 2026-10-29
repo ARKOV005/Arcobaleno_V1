@@ -97,6 +97,9 @@ class EventControlService:
             merged["schema_version"] = _CONTROL_SCHEMA_VERSION
             merged["event_mode"] = merged.get("event_mode") if merged.get("event_mode") in _ALLOWED_EVENT_MODES else "setup"
             merged["uploads_open"] = bool(merged.get("uploads_open", False))
+            merged["guest_downloads_enabled"] = bool(merged.get("guest_downloads_enabled", False))
+            if merged["uploads_open"] and merged["guest_downloads_enabled"]:
+                merged["guest_downloads_enabled"] = False
             merged["pause_message"] = self._clean_message(merged.get("pause_message")) or _DEFAULT_PAUSE_MESSAGE
             merged["moderation_mode"] = merged.get("moderation_mode") if merged.get("moderation_mode") in _ALLOWED_MODERATION_MODES else "family"
             try:
@@ -128,8 +131,16 @@ class EventControlService:
                 payload["event_mode"] = mode
             if "guest_downloads_enabled" in changes:
                 payload["guest_downloads_enabled"] = bool(changes["guest_downloads_enabled"])
+                if payload["guest_downloads_enabled"]:
+                    payload["uploads_open"] = False
             if "uploads_open" in changes:
                 payload["uploads_open"] = bool(changes["uploads_open"])
+                if payload["uploads_open"]:
+                    payload["guest_downloads_enabled"] = False
+            # Last-resort invariant for legacy or combined calls:
+            # uploads take precedence if both are requested together.
+            if payload.get("uploads_open") and payload.get("guest_downloads_enabled"):
+                payload["guest_downloads_enabled"] = False
             if "pause_message" in changes:
                 payload["pause_message"] = self._clean_message(changes["pause_message"]) or _DEFAULT_PAUSE_MESSAGE
             if "moderation_mode" in changes:
