@@ -268,3 +268,25 @@ def print_access_cards():
     response.headers["Cache-Control"] = "no-store, max-age=0"
     response.headers["X-Robots-Tag"] = "noindex, nofollow"
     return response
+
+
+@access_blueprint.get("/media/event-instructions/<kind>.png")
+def public_instruction_qr(kind: str):
+    """QRs for the event display only; no operator data or secret settings exposed."""
+    event = _event_service().get_active_event()
+    if event is None or kind not in {"wifi", "camera"}:
+        return make_response("Not available.", 404)
+    network = _network_state()
+    if not network["ready"]:
+        return make_response("Event network not ready.", 409)
+    settings = _access_service().get_settings(str(event["id"]))
+    if not _access_service().wifi_ready(settings["wifi"]):
+        return make_response("Event Wi-Fi not configured.", 409)
+    if kind == "wifi":
+        payload = _access_service().wifi_payload(settings["wifi"])
+    else:
+        payload = str(current_app.config["ARCOBALENO_CAMERA_URL"])
+    response = send_file(io.BytesIO(_access_service().qr_png(payload)), mimetype="image/png")
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["X-Robots-Tag"] = "noindex, nofollow"
+    return response
