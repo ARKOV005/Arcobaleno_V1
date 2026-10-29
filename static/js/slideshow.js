@@ -328,7 +328,7 @@
         lastCommandSequence = Math.max(lastCommandSequence, commandSequence);
 
         const updated = String(control.updated_at || "");
-        if (updated && updated === lastControlUpdated) return;
+        if (updated && updated === lastControlUpdated && productionState === (control.slideshow_state || "playing")) return;
         lastControlUpdated = updated;
         productionState = control.slideshow_state || "playing";
         document.body.dataset.productionState = productionState;
