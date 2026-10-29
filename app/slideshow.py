@@ -139,21 +139,40 @@ def slideshow_feed_api():
         timeline = []
         featured = None
 
-    # Compute one authoritative instruction page for every projector, using server time.
+    # Server-derived recurring schedule. All screens use the same 180-second cycle.
+    now = datetime.now(timezone.utc)
     instruction = {"active": False, "page": 0, "remaining": 0}
-    if control.get("slideshow_state") == "instructions":
+    explicit = control.get("slideshow_state") == "instructions"
+    if explicit:
         try:
-            started = datetime.fromisoformat(str(control.get("instructions_started_at") or ""))
-            if started.tzinfo is None:
-                started = started.replace(tzinfo=timezone.utc)
-            elapsed = max(0, (datetime.now(timezone.utc) - started).total_seconds())
-            if elapsed < 30:
-                instruction = {"active": True, "page": min(2, int(elapsed // 10)),
-                               "remaining": max(0, int(30 - elapsed))}
-            else:
+            start = datetime.fromisoformat(str(control.get("instructions_started_at") or ""))
+            if start.tzinfo is None:
+                start = start.replace(tzinfo=timezone.utc)
+            elapsed = max(0, (now - start).total_seconds())
+            if elapsed >= 30:
                 control["slideshow_state"] = "playing"
+            else:
+                instruction = {"active": True, "page": int(elapsed // 10),
+                               "remaining": max(0, int(30 - elapsed))}
         except ValueError:
             control["slideshow_state"] = "playing"
+    if not instruction["active"] and control.get("slideshow_state") == "playing" and control.get("instructions_enabled", True):
+        try:
+            started = datetime.fromisoformat(str(control.get("live_started_at") or ""))
+            if started.tzinfo is None:
+                started = started.replace(tzinfo=timezone.utc)
+            elapsed = (now - started).total_seconds()
+            # Countdown begins when slideshow starts; first automatic break after 3 minutes.
+            if elapsed >= 180:
+                cycle = int(elapsed // 180)
+                within = elapsed - cycle * 180
+                if within < 30 and cycle != int(control.get("instructions_skip_cycle", -1)):
+                    instruction = {"active": True, "page": int(within // 10),
+                                   "remaining": max(0, int(30 - within)), "cycle": cycle}
+        except (ValueError, TypeError):
+            pass
+    if instruction["active"]:
+        control["slideshow_state"] = "instructions"
     approved = _photo_service().list_photos(str(event["id"]))
     synced = current_app.extensions["arcobaleno_display_sync_service"].snapshot(
         str(event["id"]), [p["id"] for p in approved if p.get("moderation_status") == "approved"],
