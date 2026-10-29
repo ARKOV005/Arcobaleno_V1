@@ -47,6 +47,15 @@ figcaption small{display:block;color:var(--muted);margin-top:4px}
 .viewer button:focus-visible,.grid a:focus-visible{outline:3px solid #e7c57b;outline-offset:2px}
 body.viewer-open{overflow:hidden;touch-action:manipulation}
 @media(max-width:390px){.viewer-brand span{display:none}.viewer button{padding:11px 13px}.viewer-label strong{max-width:48vw}}
+
+.bulk-bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:8px 0 14px}
+.bulk-bar button{min-height:44px;padding:10px 13px;border-radius:12px;border:1px solid var(--accent);background:var(--card);color:var(--fg);font-weight:750;touch-action:manipulation}
+.bulk-bar #bulk-save{background:var(--accent);color:var(--accent-text)}
+.bulk-bar button:disabled{opacity:.45}
+.bulk-check{position:absolute;z-index:3;top:8px;right:8px;width:42px;height:42px;border-radius:50%;border:2px solid #fff;background:#243644e0;color:#fff;font-size:23px;touch-action:manipulation}
+figure{position:relative}
+figure.is-selected{outline:4px solid var(--accent);outline-offset:-4px}
+#bulk-help{padding:12px;border-radius:12px;background:var(--card);line-height:1.5}
 </style>
 </head>
 <body class="theme-{{ active_event.theme or 'default' }}">
@@ -62,9 +71,20 @@ body.viewer-open{overflow:hidden;touch-action:manipulation}
 </header>
 <main>
 {% if photos %}
+{% if guest_downloads_enabled %}
+<div class="bulk-bar" id="bulk-bar">
+<button type="button" id="bulk-toggle" aria-pressed="false">Select Photos</button>
+<span id="bulk-count" hidden>0 / 20 selected</span>
+<button type="button" id="bulk-all" hidden>Select this page</button>
+<button type="button" id="bulk-save" hidden disabled>Download Selected</button>
+<button type="button" id="bulk-cancel" hidden>Cancel</button>
+</div>
+<p id="bulk-help" hidden></p>
+{% endif %}
 <div class="grid">
 {% for photo in photos %}
-<figure>
+<figure data-photo-id="{{ photo.id }}">
+<button class="bulk-check" type="button" aria-label="Select photo by {{ photo.guest_name }}" aria-pressed="false" hidden>○</button>
 <a class="gallery-photo" href="{{ url_for('slideshow.slideshow_photo', photo_id=photo.id) }}" data-name="{{ photo.guest_name }}" aria-label="View photo by {{ photo.guest_name }}">
 <img loading="lazy" decoding="async" src="{{ url_for('camera.guest_gallery_thumbnail', photo_id=photo.id) }}" alt="Photo shared by {{ photo.guest_name }}">
 </a>
@@ -98,6 +118,82 @@ body.viewer-open{overflow:hidden;touch-action:manipulation}
   const theme = document.body.className.replace(/^theme-/, "");
   document.getElementById("gallery-theme-color").content = palette[theme] || palette.default;
   const links = Array.from(document.querySelectorAll(".gallery-photo"));
+  const bulkToggle = document.getElementById("bulk-toggle");
+  if (bulkToggle) {
+    const selected = new Set();
+    const count = document.getElementById("bulk-count");
+    const save = document.getElementById("bulk-save");
+    const cancel = document.getElementById("bulk-cancel");
+    const selectAll = document.getElementById("bulk-all");
+    const help = document.getElementById("bulk-help");
+    const entries = Array.from(document.querySelectorAll("figure[data-photo-id]"));
+    let selectionMode = false;
+    let downloading = false;
+    const ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    function draw() {
+      count.textContent = selected.size + " / 20 selected";
+      save.disabled = selected.size === 0 || downloading;
+      save.textContent = downloading ? "Preparing ZIP…" : "Download " + selected.size + " Photos";
+      [count,save,cancel,selectAll,help].forEach(el => {el.hidden = !selectionMode;});
+      bulkToggle.hidden = selectionMode;
+      bulkToggle.setAttribute("aria-pressed", String(selectionMode));
+      entries.forEach(card => {
+        const active = selected.has(card.dataset.photoId);
+        card.classList.toggle("is-selected", active);
+        const button = card.querySelector(".bulk-check");
+        button.hidden = !selectionMode;
+        button.textContent = active ? "✓" : "○";
+        button.setAttribute("aria-pressed", String(active));
+      });
+      help.textContent = ios ?
+       "iPhone Safari: the ZIP saves in Files → Downloads. Open the ZIP, select the extracted images, then tap Share → Save Images to add them to Photos." :
+       "Android: the selected photos download as a ZIP. Open the ZIP in your Files app and extract the images.";
+    }
+    function clear() {selectionMode=false;selected.clear();draw();}
+    bulkToggle.addEventListener("click",()=>{selectionMode=true;draw();});
+    cancel.addEventListener("click",clear);
+    entries.forEach(card => {
+      const toggle = () => {
+        const id = card.dataset.photoId;
+        if (selected.has(id)) selected.delete(id);
+        else if (selected.size < 20) selected.add(id);
+        draw();
+      };
+      card.querySelector(".bulk-check").addEventListener("click",toggle);
+      card.querySelector(".gallery-photo").addEventListener("click", e => {
+        if (!selectionMode) return;
+        e.preventDefault();e.stopImmediatePropagation();toggle();
+      }, true);
+    });
+    selectAll.addEventListener("click",()=>{
+      entries.forEach(card=>{if(selected.size < 20)selected.add(card.dataset.photoId);});
+      draw();
+    });
+    save.addEventListener("click",async()=>{
+      if (!selected.size || downloading) return;
+      downloading=true;draw();
+      try {
+        const response=await fetch("{{ url_for('camera.guest_gallery_bulk_download') }}",{
+          method:"POST",
+          headers:{"Content-Type":"application/json","X-CSRF-Token":"{{ csrf_token() }}"},
+          body:JSON.stringify({photo_ids:Array.from(selected)})
+        });
+        if (!response.ok) {
+          const payload=await response.json().catch(()=>({}));
+          throw Error(payload.error || "Unable to prepare these photos.");
+        }
+        const blob=await response.blob();
+        const url=URL.createObjectURL(blob);
+        const a=document.createElement("a");
+        a.href=url;a.download="ARCOBALENO-Photos.zip";
+        document.body.append(a);a.click();a.remove();
+        setTimeout(()=>URL.revokeObjectURL(url),30000);
+        help.textContent=ios ? "Open Files → Downloads to extract your ZIP, then save the images to Photos." : "ZIP downloaded. Open your Files app to extract the images.";
+      } catch(err) {help.textContent=err.message || "Please try again.";}
+      finally {downloading=false;draw();}
+    });
+    draw();
+  }
   const viewer = document.getElementById("viewer");
   const viewerImg = document.getElementById("viewer-image");
   const name = document.getElementById("viewer-name");
