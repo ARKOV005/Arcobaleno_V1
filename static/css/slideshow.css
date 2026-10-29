@@ -972,3 +972,7 @@ body.theme-disco::after {
     body.theme-secret-garden::after { width: 7rem; opacity: 0.4; }
     body.theme-disco::after { width: 15rem; height: 15rem; top: -7rem; }
 }
+
+/* Stage-safe position: raise lower-left photo caption above flower/decor obstructions. */
+.photo-caption { left: max(3rem, 4.5vw, env(safe-area-inset-left)); bottom: max(5.5rem, 12vh, env(safe-area-inset-bottom)); }
+@media(max-width:720px){.photo-caption {left:max(1.5rem,env(safe-area-inset-left));bottom:max(4.5rem,10vh,env(safe-area-inset-bottom));}}
