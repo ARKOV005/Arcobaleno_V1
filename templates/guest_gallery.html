@@ -42,7 +42,7 @@ figcaption small{display:block;color:var(--muted);margin-top:4px}
 .viewer-brand{display:flex;align-items:center;gap:7px;font-size:11px;letter-spacing:.07em;white-space:nowrap}
 .viewer-brand img{height:23px;width:23px;object-fit:contain}
 .viewer-actions{display:flex;gap:10px;align-items:center}
-.viewer button{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;border:1px solid #82939e;background:#233440;color:#fff;border-radius:12px;padding:12px 15px;font-size:15px;font-weight:700;min-height:45px;cursor:pointer}
+.viewer-download{display:inline-flex;align-items:center;min-height:45px;padding:10px 13px;border-radius:12px;background:#346450;color:white;text-decoration:none;font-weight:700}.viewer button{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;border:1px solid #82939e;background:#233440;color:#fff;border-radius:12px;padding:12px 15px;font-size:15px;font-weight:700;min-height:45px;cursor:pointer}
 .viewer button:disabled{opacity:.35}
 .viewer button:focus-visible,.grid a:focus-visible{outline:3px solid #e7c57b;outline-offset:2px}
 body.viewer-open{overflow:hidden;touch-action:manipulation}
@@ -86,7 +86,7 @@ body.viewer-open{overflow:hidden;touch-action:manipulation}
   <div class="viewer-bottom">
     <button type="button" id="viewer-back" aria-label="Back to gallery">← Back</button>
     <div class="viewer-label"><span>Shared by</span><strong id="viewer-name"></strong></div>
-    <div class="viewer-actions"><button type="button" id="viewer-prev" aria-label="Previous photo">‹</button><button type="button" id="viewer-next" aria-label="Next photo">›</button></div>
+    <div class="viewer-actions">{% if guest_downloads_enabled %}<a id="viewer-download" class="viewer-download" href="#" download aria-label="Download photo">↓ Save</a>{% endif %}<button type="button" id="viewer-prev" aria-label="Previous photo">‹</button><button type="button" id="viewer-next" aria-label="Next photo">›</button></div>
   </div>
 </div>
 <script>
@@ -112,6 +112,8 @@ body.viewer-open{overflow:hidden;touch-action:manipulation}
     index = i;
     const link = links[i];
     viewerImg.src = link.href;
+    const download = document.getElementById("viewer-download");
+    if (download) download.href = link.href.replace("/media/slideshow/", "/media/gallery/download/");
     name.textContent = link.dataset.name || "Guest";
     viewerImg.alt = "Photo shared by " + name.textContent;
     count.textContent = (i+1) + " / " + links.length;
