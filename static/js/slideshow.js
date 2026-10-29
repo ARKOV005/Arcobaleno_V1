@@ -64,6 +64,8 @@
     let playing = true;
     let infoVisible = true;
     let advanceTimer = null;
+    let sharedSyncEnabled = false;
+    let syncPhotoPending = null;
     let controlsTimer = null;
     let toastTimer = null;
     let polling = false;
@@ -188,7 +190,7 @@
         positionTotal.textContent = String(photos.length);
         updateControls();
         sendHeartbeat();
-        scheduleAdvance(manual ? secondsPerPhoto : secondsPerPhoto);
+        if (!sharedSyncEnabled) scheduleAdvance(secondsPerPhoto);
         return true;
     }
 
@@ -314,7 +316,7 @@
 
     function applyControl(control = {}, timeline = [], featuredMarker = null) {
         const commandSequence = Number(control.slideshow_command_sequence || 0);
-        if (commandSequence > lastCommandSequence && lastCommandSequence >= 0) {
+        if (!sharedSyncEnabled && commandSequence > lastCommandSequence && lastCommandSequence >= 0) {
             if (control.slideshow_command === "next") advance(1, true);
             else if (control.slideshow_command === "previous") advance(-1, true);
             else if (control.slideshow_command === "restart" && photos.length) showPhoto(photos[0], true);
@@ -331,7 +333,7 @@
         if (productionState === "playing") {
             playing = true;
             if (!currentPhotoId && photos.length) showPhoto(photos[0], false);
-            scheduleAdvance();
+            if (!sharedSyncEnabled) scheduleAdvance();
         } else if (productionState === "paused") {
             playing = false;
             clearAdvanceTimer();
@@ -391,10 +393,19 @@
             const added = addPhotos(data.photos, prioritize);
             cursor = Number.isFinite(Number(data.cursor)) ? Number(data.cursor) : cursor;
             applyTheme(data.event?.theme);
+            sharedSyncEnabled = data.sync?.mode === "server";
+            if (sharedSyncEnabled) clearAdvanceTimer();
             applyControl(data.control || {}, data.timeline || [], data.featured_marker || null);
+            if (sharedSyncEnabled && data.sync.photo_id && productionState === "playing") {
+                const target = photos.find(p => p.id === data.sync.photo_id);
+                if (target && currentPhotoId !== target.id && syncPhotoPending !== target.id) {
+                    syncPhotoPending = target.id;
+                    try { await showPhoto(target, true); } finally { syncPhotoPending = null; }
+                }
+            }
 
-            if (!currentPhotoId && photos.length && productionState === "playing") await showPhoto(photos[0], false);
-            else if (added.length && prioritize && playing && productionState === "playing") scheduleAdvance(Math.min(2.5, secondsPerPhoto));
+            if (!sharedSyncEnabled && !currentPhotoId && photos.length && productionState === "playing") await showPhoto(photos[0], false);
+            else if (!sharedSyncEnabled && added.length && prioritize && playing && productionState === "playing") scheduleAdvance(Math.min(2.5, secondsPerPhoto));
 
             if (!photos.length) {
                 waitingScreen.classList.remove("is-hidden");
