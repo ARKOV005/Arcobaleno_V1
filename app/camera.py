@@ -2,6 +2,9 @@ from __future__ import annotations
 
 import logging
 import secrets
+import io
+import zipfile
+import re
 from typing import Any
 
 from flask import Blueprint, current_app, jsonify, make_response, redirect, render_template, request, session, url_for, send_file
@@ -322,4 +325,48 @@ def guest_gallery_thumbnail(photo_id: str):
     response = send_file(path, mimetype="image/jpeg", conditional=True)
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["Cache-Control"] = "private, max-age=60"
+    return response
+
+
+@camera_blueprint.post("/api/gallery/download-selected")
+def guest_gallery_bulk_download():
+    """Produce a bounded ZIP in memory; never expose hidden or pending records."""
+    event = _event_service().get_active_event()
+    if event is None:
+        return jsonify({"error": "No active event."}), 409
+    event_id = str(event["id"])
+    try:
+        control = _event_control_service().get(event_id)
+    except EventControlError:
+        return jsonify({"error": "Download permission unavailable."}), 503
+    if not control.get("guest_downloads_enabled", False):
+        return jsonify({"error": "Guest downloads are disabled."}), 403
+    payload = request.get_json(silent=True) or {}
+    ids = payload.get("photo_ids")
+    if not isinstance(ids, list) or not 1 <= len(ids) <= 20 or len(ids) != len(set(map(str, ids))):
+        return jsonify({"error": "Select between 1 and 20 different photos."}), 400
+    if any(not isinstance(item, str) or not re.fullmatch(r"[a-f0-9]{24}", item) for item in ids):
+        return jsonify({"error": "Invalid photo selection."}), 400
+    output = io.BytesIO()
+    total_bytes = 0
+    try:
+        with zipfile.ZipFile(output, "w", compression=zipfile.ZIP_STORED, allowZip64=True) as archive:
+            for number, photo_id in enumerate(ids, 1):
+                record, path = _photo_service().photo_file(event_id, photo_id)
+                if record.get("moderation_status") != "approved":
+                    return jsonify({"error": "One of the selected photos is unavailable."}), 403
+                total_bytes += path.stat().st_size
+                if total_bytes > 300 * 1024 * 1024:
+                    return jsonify({"error": "Selection is too large. Choose fewer photos."}), 413
+                archive.write(path, arcname=f"ARCOBALENO-{number:02d}{path.suffix.lower()}")
+    except PhotoNotFoundError:
+        return jsonify({"error": "One photo was removed. Refresh the gallery."}), 404
+    except (PhotoStorageError, OSError):
+        LOGGER.exception("Could not prepare guest bulk download")
+        return jsonify({"error": "Could not prepare your photos."}), 503
+    output.seek(0)
+    response = send_file(output, mimetype="application/zip", as_attachment=True,
+                         download_name="ARCOBALENO-Photos.zip", max_age=0)
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["X-Content-Type-Options"] = "nosniff"
     return response
