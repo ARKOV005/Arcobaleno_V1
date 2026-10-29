@@ -138,8 +138,16 @@ def slideshow_feed_api():
         timeline = []
         featured = None
 
+    approved = _photo_service().list_photos(str(event["id"]))
+    synced = current_app.extensions["arcobaleno_display_sync_service"].snapshot(
+        str(event["id"]), [p["id"] for p in approved if p.get("moderation_status") == "approved"],
+        _slideshow_config()["seconds_per_photo"],
+        control.get("slideshow_command_sequence", 0),
+        control.get("slideshow_command", ""),
+    )
     response = jsonify(
         {
+            "sync": synced,
             "active": True,
             "event": EventService.public_event(event),
             "settings": _slideshow_config(),
