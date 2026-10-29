@@ -74,6 +74,8 @@
     let lastSuccessfulSyncAt = 0;
     const SYNC_HEALTH_WINDOW_MS = 15000;
     let slideshowState = app.dataset.initialSlideshowState || "playing";
+    let instructionsEnabled = true;
+    let liveStartedAt = "";
     let photoLimit = Number(app.dataset.initialPhotoLimit || 0);
 
     function toast(message, kind = "info") {
@@ -607,6 +609,12 @@
 
     function applyControl(control = {}) {
         if (control.slideshow_state) slideshowState = control.slideshow_state;
+        if (typeof control.instructions_enabled === "boolean") instructionsEnabled = control.instructions_enabled;
+        if (control.live_started_at) liveStartedAt = control.live_started_at;
+        const status = document.getElementById("guest-instruction-status");
+        if(status) status.textContent = (instructionsEnabled?"On":"Off")+" · Every 3 min · 10s/page · 30s total";
+        const toggle = document.getElementById("guest-instructions-toggle");
+        if(toggle) toggle.textContent = instructionsEnabled?"Turn off":"Turn on";
         updateSlideshowControls();
     }
 
@@ -817,7 +825,18 @@
     releaseFiveButton.addEventListener("click", () => releaseQueued(5, { resume: false, scroll: false }));
     resumeFeedButton.addEventListener("click", () => releaseQueued(Infinity, { resume: true }));
     slideshowToggleButton.addEventListener("click", () => setSlideshowState(slideshowState === "playing" ? "paused" : "playing"));
-    document.getElementById("joining-instructions-button")?.addEventListener("click", () => setSlideshowState(slideshowState === "instructions" ? "playing" : "instructions"));
+    document.getElementById("guest-instructions-show")?.addEventListener("click", () => setSlideshowState("instructions"));
+    document.getElementById("guest-instructions-toggle")?.addEventListener("click", async () => {
+        try {await postSlideshowControl({instructions_enabled: String(!instructionsEnabled)});toast("Instruction schedule updated.");}
+        catch(error){toast(error.message || "Cannot update instructions.","error");}
+    });
+    document.getElementById("guest-instructions-skip")?.addEventListener("click", async () => {
+        const elapsed = (Date.now() - Date.parse(liveStartedAt))/1000;
+        const cycle = Number.isFinite(elapsed) ? Math.max(0,Math.floor(elapsed/180)) : 0;
+        try {await postSlideshowControl({state:"playing",instructions_skip_cycle:String(cycle)});toast("Guest instructions skipped.");}
+        catch(error){toast(error.message || "Cannot skip instructions.","error");}
+    });
+    document.getElementById("guest-event-intro")?.addEventListener("click", () => setSlideshowState("logo"));
     holdButton.addEventListener("click", () => setSlideshowState(slideshowState === "black" ? "playing" : "black"));
     emergencyButton.addEventListener("click", () => setSlideshowState(slideshowState === "emergency" ? "playing" : "emergency"));
     document.querySelectorAll("[data-slideshow-command]").forEach((button) => {
