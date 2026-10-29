@@ -45,6 +45,7 @@ class EventControlService:
             "event_id": event_id,
             "event_mode": "setup",
             "uploads_open": False,
+            "guest_downloads_enabled": False,
             "pause_message": _DEFAULT_PAUSE_MESSAGE,
             "moderation_mode": "family",
             "moderation_delay_seconds": 10,
@@ -124,6 +125,8 @@ class EventControlService:
                 if mode not in _ALLOWED_EVENT_MODES:
                     raise EventControlError("The event mode is invalid.")
                 payload["event_mode"] = mode
+            if "guest_downloads_enabled" in changes:
+                payload["guest_downloads_enabled"] = bool(changes["guest_downloads_enabled"])
             if "uploads_open" in changes:
                 payload["uploads_open"] = bool(changes["uploads_open"])
             if "pause_message" in changes:
