@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 from typing import Any
+from datetime import datetime, timezone
 
 from flask import Blueprint, current_app, jsonify, make_response, redirect, render_template, request, send_file, url_for
 
@@ -138,6 +139,21 @@ def slideshow_feed_api():
         timeline = []
         featured = None
 
+    # Compute one authoritative instruction page for every projector, using server time.
+    instruction = {"active": False, "page": 0, "remaining": 0}
+    if control.get("slideshow_state") == "instructions":
+        try:
+            started = datetime.fromisoformat(str(control.get("instructions_started_at") or ""))
+            if started.tzinfo is None:
+                started = started.replace(tzinfo=timezone.utc)
+            elapsed = max(0, (datetime.now(timezone.utc) - started).total_seconds())
+            if elapsed < 30:
+                instruction = {"active": True, "page": min(2, int(elapsed // 10)),
+                               "remaining": max(0, int(30 - elapsed))}
+            else:
+                control["slideshow_state"] = "playing"
+        except ValueError:
+            control["slideshow_state"] = "playing"
     approved = _photo_service().list_photos(str(event["id"]))
     synced = current_app.extensions["arcobaleno_display_sync_service"].snapshot(
         str(event["id"]), [p["id"] for p in approved if p.get("moderation_status") == "approved"],
@@ -149,6 +165,7 @@ def slideshow_feed_api():
     response = jsonify(
         {
             "sync": synced,
+            "instruction": instruction,
             "active": True,
             "event": EventService.public_event(event),
             "settings": _slideshow_config(),
