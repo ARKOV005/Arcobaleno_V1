@@ -9,7 +9,7 @@ class DisplaySyncService:
         self._lock = threading.RLock()
         self._sessions = {}
 
-    def snapshot(self, event_id, approved_ids, duration, command_sequence=0, command=""):
+    def snapshot(self, event_id, approved_ids, duration, command_sequence=0, command="", playing=True):
         now = time.monotonic()
         duration = max(2.0, float(duration))
         approved = tuple(sorted(set(approved_ids)))
@@ -44,7 +44,10 @@ class DisplaySyncService:
                     state["changed"] = now
                     state["revision"] += 1
                 state["sequence"] = seq
-            if len(current) > 1:
+            if not playing:
+                # While paused, preserve the displayed photo; do not advance behind the screens.
+                state["changed"] = now
+            if playing and len(current) > 1:
                 elapsed = max(0, now - state["changed"])
                 steps = int(elapsed // duration)
                 if steps:
