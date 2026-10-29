@@ -52,6 +52,19 @@
                 </p>
             </section>
 
+            <section class="production-screen production-instructions-screen" id="production-instructions-screen" hidden aria-label="How to join this event">
+                <div class="joining-instructions">
+                    <img src="{{ url_for('static', filename='img/arcobaleno-mark.svg') }}" alt="">
+                    <p>JOIN THE CELEBRATION</p>
+                    <h1>{{ active_event.title }}</h1>
+                    <div class="joining-steps">
+                        <div><strong>1</strong><span>Connect to the event Wi-Fi</span></div>
+                        <div><strong>2</strong><span>Scan the guest camera QR code</span></div>
+                        <div><strong>3</strong><span>Take a photo and share it!</span></div>
+                    </div>
+                    <p>Ask an event coordinator for the Wi-Fi and camera QR cards.</p>
+                </div>
+            </section>
             <section class="production-screen production-logo-screen" id="production-logo-screen" hidden>
                 <img src="{{ url_for('static', filename='img/arcobaleno-logo.svg') }}" alt="ARCOBALENO Multimedia">
                 <p>{{ active_event.title }}</p>
