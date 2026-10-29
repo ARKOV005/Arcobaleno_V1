@@ -277,9 +277,31 @@ def guest_gallery_page():
         "guest_gallery.html",
         active_event=EventService.public_event(event),
         photos=photos[:48], more=more, view=mode,
+        guest_downloads_enabled=bool(_event_control_service().get(event_id).get("guest_downloads_enabled", False)),
     ))
     response.headers["Cache-Control"] = "no-store"
     response.headers["X-Robots-Tag"] = "noindex, nofollow"
+    return response
+
+
+@camera_blueprint.get("/media/gallery/download/<photo_id>")
+def guest_gallery_download(photo_id: str):
+    event = _event_service().get_active_event()
+    if event is None:
+        return "", 404
+    try:
+        control = _event_control_service().get(str(event["id"]))
+        record, path = _photo_service().photo_file(str(event["id"]), photo_id)
+    except (PhotoNotFoundError, EventControlError):
+        return "", 404
+    except PhotoStorageError:
+        return "", 503
+    if not control.get("guest_downloads_enabled", False) or record.get("moderation_status") != "approved":
+        return "", 403
+    response = send_file(path, mimetype=str(record["media_type"]), as_attachment=True,
+                         download_name=path.name, conditional=True)
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["X-Content-Type-Options"] = "nosniff"
     return response
 
 
