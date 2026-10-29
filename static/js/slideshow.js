@@ -48,6 +48,9 @@
     const productionScreens = Array.from(document.querySelectorAll(".production-screen"));
     const logoScreen = document.getElementById("production-logo-screen");
     const instructionsScreen = document.getElementById("production-instructions-screen");
+    const instructionPages = Array.from(document.querySelectorAll("[data-instruction-page]"));
+    const instructionCountdown = document.getElementById("joining-countdown");
+    let instructionState = {active:false,page:0,remaining:0};
     const blackScreen = document.getElementById("production-black-screen");
     const emergencyScreen = document.getElementById("production-emergency-screen");
     const timelineScreen = document.getElementById("production-timeline-screen");
@@ -344,6 +347,8 @@
             app.classList.add("production-screen-active");
             if (productionState === "instructions") {
                 instructionsScreen.hidden = false;
+                instructionPages.forEach((page,i) => { page.hidden = i !== instructionState.page; });
+                instructionCountdown.textContent = instructionState.remaining + "s";
             } else if (productionState === "black") {
                 blackScreen.hidden = false;
                 document.getElementById("hold-screen-message").textContent = control.slideshow_message || "Please enjoy this special moment.";
@@ -398,7 +403,13 @@
             applyTheme(data.event?.theme);
             sharedSyncEnabled = data.sync?.mode === "server";
             if (sharedSyncEnabled) clearAdvanceTimer();
+            instructionState = data.instruction || {active:false,page:0,remaining:0};
             applyControl(data.control || {}, data.timeline || [], data.featured_marker || null);
+            if (productionState === "instructions") {
+                instructionsScreen.hidden = false;
+                instructionPages.forEach((page,i) => { page.hidden = i !== instructionState.page; });
+                instructionCountdown.textContent = instructionState.remaining + "s";
+            }
             if (sharedSyncEnabled && data.sync.photo_id && productionState === "playing") {
                 const target = photos.find(p => p.id === data.sync.photo_id);
                 if (target && currentPhotoId !== target.id && syncPhotoPending !== target.id) {
