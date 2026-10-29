@@ -344,7 +344,7 @@ def remote_control_api():
             value = action.removeprefix("slideshow-")
             if value in {"next", "previous", "restart"}:
                 control = _control_service().send_slideshow_command(event_id, value)
-            elif value in {"playing", "paused", "logo", "black"}:
+            elif value in {"playing", "paused", "logo", "black", "instructions"}:
                 control = _control_service().update(event_id, slideshow_state=value)
             else:
                 return jsonify({"error": "That display command is not supported."}), 400
