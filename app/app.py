@@ -17,6 +17,7 @@ from app.event_service import EventService
 from app.event_control_service import EventControlService
 from app.events import events_blueprint
 from app.photo_service import PhotoService
+from app.display_sync_service import DisplaySyncService
 from app.live_service import LiveEventService
 from app.timeline_service import TimelineService
 from app.production import production_blueprint
@@ -144,6 +145,7 @@ def create_app(
     )
     application.extensions["arcobaleno_event_service"] = event_service
     application.extensions["arcobaleno_photo_service"] = photo_service
+    application.extensions["arcobaleno_display_sync_service"] = DisplaySyncService()
     application.extensions["arcobaleno_access_service"] = access_service
     application.extensions["arcobaleno_archive_service"] = archive_service
     application.extensions["arcobaleno_settings_service"] = settings_service
