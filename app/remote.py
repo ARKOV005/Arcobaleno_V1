@@ -119,6 +119,7 @@ def _control_payload(control: dict[str, Any]) -> dict[str, Any]:
     keys = (
         "event_mode",
         "uploads_open",
+        "guest_downloads_enabled",
         "pause_message",
         "moderation_mode",
         "moderation_delay_seconds",
@@ -331,6 +332,10 @@ def remote_control_api():
                 _timeline_service().append(event_id, title="Setup Mode restored from Operator Remote", detail="Uploads are paused and the display returned to the logo screen.", kind="system", icon="spark", public=False)
             except TimelineError:
                 LOGGER.warning("Could not record the remote setup-mode timeline entry", exc_info=True)
+        elif action == "downloads-enable":
+            control = _control_service().update(event_id, guest_downloads_enabled=True)
+        elif action == "downloads-disable":
+            control = _control_service().update(event_id, guest_downloads_enabled=False)
         elif action == "uploads-open":
             control = _control_service().update(event_id, uploads_open=True)
         elif action == "uploads-pause":
