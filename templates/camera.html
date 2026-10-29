@@ -97,6 +97,7 @@
             </div>
         </details>
 
+        <p style="text-align:center;margin:18px 0"><a href="{{ url_for('camera.guest_gallery_page') }}" style="color:inherit;font-weight:700;text-decoration:underline">View Event Gallery — All Photos / My Photos</a></p>
         <footer class="camera-footer">
             <span>{{ active_event.event_date|pretty_date }}</span>
             {% if active_event.venue %}<span>{{ active_event.venue }}</span>{% endif %}
