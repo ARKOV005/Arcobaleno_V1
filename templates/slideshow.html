@@ -52,19 +52,35 @@
                 </p>
             </section>
 
-            <section class="production-screen production-instructions-screen" id="production-instructions-screen" hidden aria-label="How to join this event">
-                <div class="joining-instructions">
-                    <img src="{{ url_for('static', filename='img/arcobaleno-mark.svg') }}" alt="">
-                    <p>JOIN THE CELEBRATION</p>
-                    <h1>{{ active_event.title }}</h1>
-                    <div class="joining-steps">
-                        <div><strong>1</strong><span>Connect to the event Wi-Fi</span></div>
-                        <div><strong>2</strong><span>Scan the guest camera QR code</span></div>
-                        <div><strong>3</strong><span>Take a photo and share it!</span></div>
-                    </div>
-                    <p>Ask an event coordinator for the Wi-Fi and camera QR cards.</p>
+            <section class="production-screen production-instructions-screen" id="production-instructions-screen" hidden aria-label="How to join the event">
+                <div class="joining-stage">
+                    <div class="joining-brand"><img src="{{ url_for('static', filename='img/arcobaleno-mark.svg') }}" alt=""><span>ARCOBALENO</span></div>
+                    <div class="joining-event">{{ active_event.title }}</div>
+                    <article class="joining-page" data-instruction-page="0" hidden>
+                        <p class="joining-step">STEP 1 OF 3</p>
+                        <h1>JOIN NETWORK</h1>
+                        <p>Connect your phone to the event Wi-Fi.</p>
+                        <img class="joining-qr" src="{{ url_for('access.public_instruction_qr', kind='wifi') }}" alt="Scan this QR code to join the event Wi-Fi">
+                        <p class="joining-small">Scan with your camera and tap Connect. Internet access is not required.</p>
+                    </article>
+                    <article class="joining-page" data-instruction-page="1" hidden>
+                        <p class="joining-step">STEP 2 OF 3</p>
+                        <h1>OPEN CAMERA</h1>
+                        <p>After joining the network, scan the camera QR.</p>
+                        <img class="joining-qr" src="{{ url_for('access.public_instruction_qr', kind='camera') }}" alt="Scan this QR code to open the ARCOBALENO guest camera">
+                        <p class="joining-small">Open the link in your phone browser. No app installation needed.</p>
+                    </article>
+                    <article class="joining-page" data-instruction-page="2" hidden>
+                        <p class="joining-step">STEP 3 OF 3</p>
+                        <h1>TAKE &amp; SHARE</h1>
+                        <p>Enter your name, take photos, and share your memories!</p>
+                        <div class="joining-photo-glyph" aria-hidden="true">◎</div>
+                        <p class="joining-small">Look for your pictures on the event screen and in the gallery.</p>
+                    </article>
+                    <div class="joining-progress"><span id="joining-countdown">30s</span><div class="joining-dots"><b></b><b></b><b></b></div></div>
                 </div>
             </section>
+
             <section class="production-screen production-logo-screen" id="production-logo-screen" hidden>
                 <img src="{{ url_for('static', filename='img/arcobaleno-logo.svg') }}" alt="ARCOBALENO Multimedia">
                 <p>{{ active_event.title }}</p>
