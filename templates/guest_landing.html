@@ -22,6 +22,7 @@
             </p>
             <div class="hero-actions">
                 <a class="button button-primary" href="{{ url_for('camera.camera_page') }}">{% if event_control and not event_control.uploads_open %}View event camera{% else %}Open event camera{% endif %}</a>
+                <a class="button" href="{{ url_for('camera.guest_gallery_page') }}">View Event Gallery</a>
             </div>
         {% else %}
             <h1>The event experience is being prepared.</h1>
