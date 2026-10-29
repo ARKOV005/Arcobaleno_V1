@@ -976,3 +976,14 @@ body.theme-disco::after {
 /* Stage-safe position: raise lower-left photo caption above flower/decor obstructions. */
 .photo-caption { left: max(3rem, 4.5vw, env(safe-area-inset-left)); bottom: max(5.5rem, 12vh, env(safe-area-inset-bottom)); }
 @media(max-width:720px){.photo-caption {left:max(1.5rem,env(safe-area-inset-left));bottom:max(4.5rem,10vh,env(safe-area-inset-bottom));}}
+
+/* Lightweight joining instructions: no per-frame animations or extra polling. */
+.joining-instructions{height:100%;min-height:100dvh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:clamp(12px,3vh,28px);padding:clamp(24px,5vw,75px);background:#161e25;color:#fff}
+.joining-instructions>img{width:clamp(42px,6vw,85px)}
+.joining-instructions h1{font-size:clamp(30px,4vw,76px);margin:0}
+.joining-instructions p{font-size:clamp(15px,1.6vw,26px);margin:0}
+.joining-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;width:min(1200px,100%)}
+.joining-steps>div{display:flex;align-items:center;flex-direction:column;gap:14px;background:#ffffff12;border:1px solid #ffffff33;border-radius:20px;padding:clamp(18px,3vw,38px)}
+.joining-steps strong{border-radius:50%;background:#edca81;color:#1c242c;width:54px;height:54px;display:grid;place-items:center;font-size:28px}
+.joining-steps span{font-size:clamp(18px,2vw,32px);font-weight:700}
+@media(max-width:650px){.joining-steps{grid-template-columns:1fr}.joining-steps>div{flex-direction:row;text-align:left;padding:12px}.joining-steps span{font-size:16px}}
