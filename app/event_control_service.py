@@ -13,7 +13,7 @@ _MAX_MESSAGE_LENGTH = 180
 _DEFAULT_PAUSE_MESSAGE = "Photo uploads are temporarily paused. Please try again shortly."
 _ALLOWED_EVENT_MODES = {"setup", "live"}
 _ALLOWED_MODERATION_MODES = {"family", "instant", "curated"}
-_ALLOWED_SLIDESHOW_STATES = {"playing", "paused", "black", "logo", "timeline", "marker", "emergency"}
+_ALLOWED_SLIDESHOW_STATES = {"playing", "paused", "black", "logo", "timeline", "marker", "emergency", "instructions"}
 _ALLOWED_SLIDESHOW_COMMANDS = {"", "next", "previous", "restart"}
 
 
