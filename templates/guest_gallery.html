@@ -129,6 +129,7 @@ figure.is-selected{outline:4px solid var(--accent);outline-offset:-4px}
     const entries = Array.from(document.querySelectorAll("figure[data-photo-id]"));
     let selectionMode = false;
     let downloading = false;
+    let statusMessage = "";
     const ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
     function draw() {
       count.textContent = selected.size + " / 20 selected";
@@ -145,9 +146,9 @@ figure.is-selected{outline:4px solid var(--accent);outline-offset:-4px}
         button.textContent = active ? "✓" : "○";
         button.setAttribute("aria-pressed", String(active));
       });
-      help.textContent = ios ?
+      help.textContent = statusMessage || (ios ?
        "iPhone Safari: the ZIP saves in Files → Downloads. Open the ZIP, select the extracted images, then tap Share → Save Images to add them to Photos." :
-       "Android: the selected photos download as a ZIP. Open the ZIP in your Files app and extract the images.";
+       "Android: the selected photos download as a ZIP. Open the ZIP in your Files app and extract the images.");
     }
     function clear() {selectionMode=false;selected.clear();draw();}
     bulkToggle.addEventListener("click",()=>{selectionMode=true;draw();});
@@ -188,8 +189,8 @@ figure.is-selected{outline:4px solid var(--accent);outline-offset:-4px}
         a.href=url;a.download="ARCOBALENO-Photos.zip";
         document.body.append(a);a.click();a.remove();
         setTimeout(()=>URL.revokeObjectURL(url),30000);
-        help.textContent=ios ? "Open Files → Downloads to extract your ZIP, then save the images to Photos." : "ZIP downloaded. Open your Files app to extract the images.";
-      } catch(err) {help.textContent=err.message || "Please try again.";}
+        statusMessage=ios ? "Open Files → Downloads to extract your ZIP, then save the images to Photos." : "ZIP downloaded. Open your Files app to extract the images.";
+      } catch(err) {statusMessage=err.message || "Please try again.";}
       finally {downloading=false;draw();}
     });
     draw();
