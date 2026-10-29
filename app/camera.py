@@ -4,7 +4,7 @@ import logging
 import secrets
 from typing import Any
 
-from flask import Blueprint, current_app, jsonify, make_response, redirect, render_template, request, session, url_for
+from flask import Blueprint, current_app, jsonify, make_response, redirect, render_template, request, session, url_for, send_file
 
 from app.event_service import EventService
 from app.event_control_service import EventControlError, EventControlService
@@ -15,6 +15,7 @@ from app.photo_service import (
     PhotoCapacityError,
     PhotoIntegrityError,
     PhotoLimitReachedError,
+    PhotoNotFoundError,
     PhotoService,
     PhotoStorageError,
     PhotoValidationError,
@@ -249,3 +250,54 @@ def upload_photo_api():
             "storage_message": storage_after["message"],
         }
     )
+
+
+@camera_blueprint.get("/gallery")
+def guest_gallery_page():
+    event = _event_service().get_active_event()
+    if event is None:
+        return redirect(url_for("events.home"))
+    mode = "mine" if request.args.get("view") == "mine" else "all"
+    event_id = str(event["id"])
+    device_hash = _photo_service()._device_hash(_device_id())
+    before = request.args.get("before", "")[:50]
+    # Fetch all records in a stable snapshot, filter moderation and ownership
+    # before pagination to avoid leaking pending/hidden pictures.
+    try:
+        photos = _photo_service().list_photos(event_id)
+    except PhotoStorageError:
+        LOGGER.exception("Could not read guest gallery")
+        return "Gallery is temporarily unavailable.", 503
+    photos = [p for p in photos if p.get("moderation_status") == "approved"
+              and (mode != "mine" or p.get("device_hash") == device_hash)]
+    if before:
+        photos = [p for p in photos if str(p.get("created_at") or "") < before]
+    more = len(photos) > 48
+    response = make_response(render_template(
+        "guest_gallery.html",
+        active_event=EventService.public_event(event),
+        photos=photos[:48], more=more, view=mode,
+    ))
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["X-Robots-Tag"] = "noindex, nofollow"
+    return response
+
+
+@camera_blueprint.get("/media/gallery/thumb/<photo_id>")
+def guest_gallery_thumbnail(photo_id: str):
+    event = _event_service().get_active_event()
+    if event is None:
+        return "", 404
+    try:
+        record, path = _photo_service().thumbnail_file(str(event["id"]), photo_id)
+    except PhotoNotFoundError:
+        return "", 404
+    except PhotoStorageError:
+        LOGGER.exception("Guest gallery thumbnail failure")
+        return "", 503
+    if record.get("moderation_status") != "approved":
+        return "", 404
+    response = send_file(path, mimetype="image/jpeg", conditional=True)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["Cache-Control"] = "private, max-age=60"
+    return response
