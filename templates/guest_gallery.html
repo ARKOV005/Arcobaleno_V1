@@ -3,16 +3,16 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#17252b">
+<meta name="theme-color" content="#faf5f0" id="gallery-theme-color">
 <title>{{ active_event.title }} | Photo Gallery</title>
 <style>
-:root{font-family:system-ui,-apple-system,Segoe UI,sans-serif;color-scheme:light;--bg:#faf5f0;--fg:#34312e;--muted:#655e59;--card:#fff8f0;--accent:#6a5f7f;--accent-text:#fff}
+html{color-scheme:light!important;background:#faf5f0} :root{font-family:system-ui,-apple-system,Segoe UI,sans-serif;color-scheme:light;--bg:#faf5f0;--fg:#34312e;--muted:#655e59;--card:#fff8f0;--accent:#6a5f7f;--accent-text:#fff}
 body.theme-floral{--bg:#fff3f4;--fg:#543d49;--muted:#7d586c;--card:#ffe3ec;--accent:#a44a71}
 body.theme-secret-garden{--bg:#eaf0e5;--fg:#1e382e;--muted:#496454;--card:#f7fbf3;--accent:#305a45}
 body.theme-ocean{--bg:#e8f7f8;--fg:#214c56;--muted:#416e7b;--card:#f8ffff;--accent:#247e8a}
 body.theme-ballroom{--bg:#fcf4e6;--fg:#4b3927;--muted:#77634a;--card:#fffaf2;--accent:#876342}
 body.theme-disco{--bg:#201e3d;--fg:#f6f2ff;--muted:#c8c0eb;--card:#322b58;--accent:#be85ef}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg)!important;color:var(--fg)!important;color-scheme:light!important;min-height:100dvh} html:has(body.theme-disco){background:#201e3d}
 header{padding:20px 18px 12px;max-width:1080px;margin:auto}
 h1{font-size:clamp(24px,5vw,40px);margin:8px 0}p{color:var(--muted)}
 nav{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0}
@@ -36,16 +36,16 @@ figcaption small{display:block;color:var(--muted);margin-top:4px}
 .viewer-top{padding-top:max(12px,env(safe-area-inset-top))}
 .viewer-bottom{padding-bottom:max(12px,env(safe-area-inset-bottom))}
 .viewer-photo{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;position:relative}
-.viewer-photo img{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain}
+.viewer-photo img{touch-action:pan-y;-webkit-user-select:none;user-select:none;max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain}
 .viewer-label{min-width:0;font-size:13px;line-height:1.4}
 .viewer-label strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:60vw}
 .viewer-brand{display:flex;align-items:center;gap:7px;font-size:11px;letter-spacing:.07em;white-space:nowrap}
 .viewer-brand img{height:23px;width:23px;object-fit:contain}
 .viewer-actions{display:flex;gap:10px;align-items:center}
-.viewer button{border:1px solid #82939e;background:#233440;color:#fff;border-radius:12px;padding:12px 15px;font-size:15px;font-weight:700;min-height:45px;cursor:pointer}
+.viewer button{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;border:1px solid #82939e;background:#233440;color:#fff;border-radius:12px;padding:12px 15px;font-size:15px;font-weight:700;min-height:45px;cursor:pointer}
 .viewer button:disabled{opacity:.35}
 .viewer button:focus-visible,.grid a:focus-visible{outline:3px solid #e7c57b;outline-offset:2px}
-body.viewer-open{overflow:hidden}
+body.viewer-open{overflow:hidden;touch-action:manipulation}
 @media(max-width:390px){.viewer-brand span{display:none}.viewer button{padding:11px 13px}.viewer-label strong{max-width:48vw}}
 </style>
 </head>
@@ -91,6 +91,12 @@ body.viewer-open{overflow:hidden}
 </div>
 <script>
 (() => {
+  const palette = {
+    "default":"#faf5f0","floral":"#fff3f4","secret-garden":"#eaf0e5",
+    "ocean":"#e8f7f8","ballroom":"#fcf4e6","disco":"#201e3d"
+  };
+  const theme = document.body.className.replace(/^theme-/, "");
+  document.getElementById("gallery-theme-color").content = palette[theme] || palette.default;
   const links = Array.from(document.querySelectorAll(".gallery-photo"));
   const viewer = document.getElementById("viewer");
   const viewerImg = document.getElementById("viewer-image");
@@ -127,6 +133,10 @@ body.viewer-open{overflow:hidden}
     show(i);
     back.focus();
   }));
+  // Prevent double-tap zoom only on viewer controls; normal page pinch zoom stays available.
+  [back, prev, next].forEach(button => {
+    button.addEventListener("dblclick", e => e.preventDefault());
+  });
   back.addEventListener("click", closeViewer);
   prev.addEventListener("click", () => show(index-1));
   next.addEventListener("click", () => show(index+1));
