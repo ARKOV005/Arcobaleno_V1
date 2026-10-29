@@ -5,6 +5,7 @@ import secrets
 import io
 import zipfile
 import re
+import tempfile
 from typing import Any
 
 from flask import Blueprint, current_app, jsonify, make_response, redirect, render_template, request, session, url_for, send_file
@@ -347,7 +348,7 @@ def guest_gallery_bulk_download():
         return jsonify({"error": "Select between 1 and 20 different photos."}), 400
     if any(not isinstance(item, str) or not re.fullmatch(r"[a-f0-9]{24}", item) for item in ids):
         return jsonify({"error": "Invalid photo selection."}), 400
-    output = io.BytesIO()
+    output = tempfile.SpooledTemporaryFile(max_size=8 * 1024 * 1024, mode='w+b')
     total_bytes = 0
     try:
         with zipfile.ZipFile(output, "w", compression=zipfile.ZIP_STORED, allowZip64=True) as archive:
@@ -356,7 +357,7 @@ def guest_gallery_bulk_download():
                 if record.get("moderation_status") != "approved":
                     return jsonify({"error": "One of the selected photos is unavailable."}), 403
                 total_bytes += path.stat().st_size
-                if total_bytes > 300 * 1024 * 1024:
+                if total_bytes > 120 * 1024 * 1024:
                     return jsonify({"error": "Selection is too large. Choose fewer photos."}), 413
                 archive.write(path, arcname=f"ARCOBALENO-{number:02d}{path.suffix.lower()}")
     except PhotoNotFoundError:
