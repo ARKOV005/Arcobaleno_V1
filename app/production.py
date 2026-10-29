@@ -95,6 +95,9 @@ def _control_payload(control: dict[str, Any]) -> dict[str, Any]:
         "moderation_mode",
         "moderation_delay_seconds",
         "slideshow_state",
+        "instructions_enabled",
+        "instructions_skip_cycle",
+        "live_started_at",
         "slideshow_command",
         "slideshow_command_sequence",
         "slideshow_title",
@@ -409,6 +412,8 @@ def slideshow_control_api():
     title = request.form.get("title")
     message = request.form.get("message")
     marker_id = request.form.get("marker_id")
+    instruction_enabled = request.form.get("instructions_enabled")
+    instruction_skip = request.form.get("instructions_skip_cycle")
     try:
         if command:
             control = _control_service().send_slideshow_command(event_id, command)
@@ -416,6 +421,10 @@ def slideshow_control_api():
             changes: dict[str, Any] = {}
             if state:
                 changes["slideshow_state"] = state
+            if instruction_enabled is not None:
+                changes["instructions_enabled"] = instruction_enabled == "true"
+            if instruction_skip is not None:
+                changes["instructions_skip_cycle"] = int(instruction_skip)
             if title is not None:
                 changes["slideshow_title"] = title
             if message is not None:
