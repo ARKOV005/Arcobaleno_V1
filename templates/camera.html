@@ -32,6 +32,7 @@
                 <span class="identity-chevron" aria-hidden="true">›</span>
             </button>
 
+            <a href="{{ url_for('camera.guest_gallery_page') }}" class="camera-gallery-button" aria-label="Open event photo gallery" style="display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 13px;border-radius:999px;text-decoration:none;background:rgba(255,255,255,.93);color:#29212b;font-size:13px;font-weight:800;box-shadow:0 2px 12px rgba(0,0,0,.14);min-height:44px;white-space:nowrap">▦ Gallery</a>
             <div class="remaining-pill" id="remaining-pill" aria-live="polite" aria-label="Photos remaining">
                 <strong id="remaining-count">{% if camera_status.unlimited %}∞{% else %}{{ camera_status.remaining }}{% endif %}</strong>
                 <span id="remaining-label">{% if camera_status.unlimited %}unlimited shots{% else %}shots left{% endif %}</span>
@@ -97,7 +98,6 @@
             </div>
         </details>
 
-        <p style="text-align:center;margin:18px 0"><a href="{{ url_for('camera.guest_gallery_page') }}" style="color:inherit;font-weight:700;text-decoration:underline">View Event Gallery — All Photos / My Photos</a></p>
         <footer class="camera-footer">
             <span>{{ active_event.event_date|pretty_date }}</span>
             {% if active_event.venue %}<span>{{ active_event.venue }}</span>{% endif %}
