@@ -817,6 +817,7 @@
     releaseFiveButton.addEventListener("click", () => releaseQueued(5, { resume: false, scroll: false }));
     resumeFeedButton.addEventListener("click", () => releaseQueued(Infinity, { resume: true }));
     slideshowToggleButton.addEventListener("click", () => setSlideshowState(slideshowState === "playing" ? "paused" : "playing"));
+    document.getElementById("joining-instructions-button")?.addEventListener("click", () => setSlideshowState(slideshowState === "instructions" ? "playing" : "instructions"));
     holdButton.addEventListener("click", () => setSlideshowState(slideshowState === "black" ? "playing" : "black"));
     emergencyButton.addEventListener("click", () => setSlideshowState(slideshowState === "emergency" ? "playing" : "emergency"));
     document.querySelectorAll("[data-slideshow-command]").forEach((button) => {
