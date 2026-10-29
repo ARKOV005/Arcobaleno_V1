@@ -22,7 +22,7 @@ def ipv4_addresses():
     return sorted(x for x in candidates if not ipaddress.ip_address(x).is_loopback)
 
 def evaluate(addresses, port, expected_ip=None):
-    private = [x for x in addresses if ipaddress.ip_address(x).is_private and not ipaddress.ip_address(x).is_link_local]
+    private = [x for x in addresses if ipaddress.ip_address(x).is_private and not ipaddress.ip_address(x).is_link_local and not ipaddress.ip_address(x).is_loopback]
     selected = expected_ip if expected_ip in addresses else (private[0] if private else None)
     checks = {
         "local_ipv4_available": bool(addresses),
