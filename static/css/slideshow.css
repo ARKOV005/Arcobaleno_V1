@@ -987,3 +987,20 @@ body.theme-disco::after {
 .joining-steps strong{border-radius:50%;background:#edca81;color:#1c242c;width:54px;height:54px;display:grid;place-items:center;font-size:28px}
 .joining-steps span{font-size:clamp(18px,2vw,32px);font-weight:700}
 @media(max-width:650px){.joining-steps{grid-template-columns:1fr}.joining-steps>div{flex-direction:row;text-align:left;padding:12px}.joining-steps span{font-size:16px}}
+
+/* Three-page projection sequence, independent of phone dark mode and screen decorations. */
+.joining-stage{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(10px,2vh,25px);text-align:center;background:#13222b;color:white;padding:clamp(22px,3vw,64px);overflow:hidden}
+.joining-brand{position:absolute;top:4%;right:5%;display:flex;align-items:center;gap:9px;font-weight:800;letter-spacing:.12em;font-size:clamp(12px,1.4vw,23px)}
+.joining-brand img{width:clamp(20px,2vw,36px)}
+.joining-event{font-weight:600;font-size:clamp(18px,2vw,36px);max-width:75%;text-overflow:ellipsis;white-space:nowrap;overflow:hidden}
+.joining-page{width:100%;min-height:0;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(8px,1.6vh,20px)}
+.joining-page[hidden]{display:none!important}
+.joining-page h1{font-size:clamp(34px,5.8vw,92px);line-height:1.08;margin:0}
+.joining-page p{margin:0;font-size:clamp(16px,2vw,32px)}
+.joining-page .joining-step{color:#eed29a;font-size:clamp(12px,1.15vw,19px);letter-spacing:.17em;font-weight:800}
+.joining-page .joining-small{font-size:clamp(13px,1.3vw,22px);opacity:.9;max-width:80%}
+.joining-page .joining-qr{display:block;width:auto;height:auto;max-width:min(32vw,390px);max-height:34vh;aspect-ratio:1;object-fit:contain;background:#fff;border:clamp(8px,1vw,16px) solid white;border-radius:8px}
+.joining-photo-glyph{font-size:clamp(80px,12vw,190px);line-height:1;color:#eed29a}
+.joining-progress{display:flex;align-items:center;gap:18px;font-weight:700;letter-spacing:.05em}
+.joining-dots{display:flex;gap:8px}.joining-dots b{width:8px;height:8px;border-radius:50%;background:#eed29a}
+@media(max-height:650px){.joining-stage{gap:4px}.joining-page{gap:5px}.joining-page .joining-qr{max-height:31vh}.joining-page h1{font-size:clamp(26px,4vw,56px)}}
