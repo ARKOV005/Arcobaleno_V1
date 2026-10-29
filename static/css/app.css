@@ -2908,3 +2908,5 @@ kbd { padding: 2px 6px; border: 1px solid rgba(70, 55, 46, 0.16); border-bottom-
 @media (prefers-reduced-motion: reduce) {
     .console-action {transition:none}
 }
+
+.event-instruction-toolbar{display:flex;align-items:center;flex-wrap:wrap;gap:7px;margin-top:10px;padding:12px;border:1px solid rgba(80,60,45,.12);border-radius:15px;background:#fbf7f1}.event-instruction-toolbar>div{flex:1 1 240px;display:grid;gap:3px}.event-instruction-toolbar strong{font-size:.78rem}.event-instruction-toolbar small{font-size:.68rem;color:#766c62}.event-instruction-toolbar .event-console-section-label{margin:0}.event-instruction-toolbar button{min-height:40px}
