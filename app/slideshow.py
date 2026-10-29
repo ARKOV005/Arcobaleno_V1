@@ -144,6 +144,7 @@ def slideshow_feed_api():
         _slideshow_config()["seconds_per_photo"],
         control.get("slideshow_command_sequence", 0),
         control.get("slideshow_command", ""),
+        playing=str(control.get("slideshow_state") or "") == "playing",
     )
     response = jsonify(
         {
