@@ -168,7 +168,7 @@ body.viewer-open{overflow:hidden;touch-action:manipulation}
   setInterval(() => {
     if (!idle || !viewer.hidden || document.hidden || new URLSearchParams(location.search).has("before")) return;
     location.reload();
-  }, 20000);
+  }, 60000);
 })();
 </script>
 </body>
