@@ -2880,3 +2880,31 @@ kbd { padding: 2px 6px; border: 1px solid rgba(70, 55, 46, 0.16); border-bottom-
 .operator-remote-qr{display:grid;justify-items:center;gap:7px;padding:13px;border:1px solid rgba(86,66,62,.12);border-radius:22px;background:#fff}
 .operator-remote-qr img{width:156px;height:156px;display:block}.operator-remote-qr small{color:#81736d;font-size:.7rem}
 @media(max-width:760px){.operator-remote-card{grid-template-columns:1fr}.operator-remote-qr{justify-self:start}.operator-remote-credentials{grid-template-columns:1fr 1fr}.operator-remote-credentials>div:first-child{grid-column:1/-1}}
+
+
+/* Preview 18: photo-first operator experience. No sticky panel over images. */
+.event-console-shell {
+    position: relative;
+    top: auto;
+    z-index: 1;
+    margin: 0 0 16px;
+    padding: clamp(12px, 1.5vw, 18px);
+    background: #fffdf9;
+    box-shadow: 0 4px 20px rgba(52,39,31,.065);
+    backdrop-filter: none;
+}
+.event-console-topline {gap: 14px;padding-bottom: 10px}
+.event-console-deck {gap: 12px;padding-top: 11px}
+.event-console-stats {gap: 6px}
+.console-stat {min-height: 52px;padding: 8px}
+.event-console-actions {gap: 6px}
+.console-action {min-height: 52px;padding: 8px}
+.console-action:hover {transform: none}
+.live-photo-grid {align-items: start;gap: 16px}
+.live-photo-grid > * {min-width:0}
+@media (max-width: 1180px) {
+    .event-console-shell {position:relative;top:auto}
+}
+@media (prefers-reduced-motion: reduce) {
+    .console-action {transition:none}
+}
