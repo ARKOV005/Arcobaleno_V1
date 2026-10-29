@@ -420,3 +420,29 @@ def operator_remote_toggle():
         LOGGER.exception("Could not change mobile operator access")
         raise
     return redirect(url_for("events.home", notice="remote-enabled" if enabled else "remote-disabled"))
+
+
+@remote_blueprint.get("/api/remote/photos")
+@remote_operator_only
+def remote_photos_api():
+    _require_remote_enabled()
+    event = _event_service().get_active_event()
+    if event is None:
+        return jsonify({"error": "No event is active."}), 409
+    before = str(request.args.get("before") or "")[:50]
+    try:
+        photos = _photo_service().list_photos(str(event["id"]), limit=49, before=before)
+    except PhotoStorageError:
+        LOGGER.exception("Could not list remote photos")
+        return jsonify({"error": "Could not load photos."}), 503
+    more = len(photos) > 48
+    photos = photos[:48]
+    return jsonify({"photos": [{
+        "id": str(p["id"]),
+        "guest_name": str(p.get("guest_name") or "Guest"),
+        "created_at": str(p.get("created_at") or ""),
+        "moderation_status": str(p.get("moderation_status") or "approved"),
+        "favorite": bool(p.get("favorite")),
+        "thumbnail_url": url_for("remote.remote_thumbnail", photo_id=p["id"]),
+    } for p in photos], "has_more": more,
+      "next_before": str(photos[-1].get("created_at") or "") if more and photos else ""})
