@@ -15,6 +15,7 @@
         class="remote-app"
         data-snapshot-url="{{ url_for('remote.remote_snapshot_api') }}"
         data-control-url="{{ url_for('remote.remote_control_api') }}"
+        data-photos-url="{{ url_for('remote.remote_photos_api') }}"
         data-csrf-token="{{ csrf_token() }}"
         data-poll-seconds="{{ poll_interval_seconds }}"
     >
@@ -93,6 +94,20 @@
                 </div>
             </section>
 
+            <section class="remote-panel">
+                <div class="remote-panel-heading"><div><p class="remote-eyebrow">Guest access</p><h2>Photo downloads</h2></div><span class="remote-pill" id="remote-download-pill">Off</span></div>
+                <div class="remote-action-grid remote-action-grid-two">
+                    <button class="remote-action" data-action="downloads-enable"><strong>Enable downloads</strong><small>Allow guest photo saving</small></button>
+                    <button class="remote-action" data-action="downloads-disable"><strong>Disable downloads</strong><small>View-only gallery</small></button>
+                </div>
+            </section>
+            <section class="remote-panel">
+                <div class="remote-panel-heading"><div><p class="remote-eyebrow">Photo library</p><h2>All uploaded photos</h2></div></div>
+                <p>Browse and moderate every upload, including hidden and pending photos.</p>
+                <button class="remote-wide-button" id="remote-photo-load" type="button">Browse photos</button>
+                <div id="remote-photo-grid" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:12px"></div>
+                <button class="remote-wide-button" id="remote-photo-more" type="button" hidden>Load older photos</button>
+            </section>
             <section class="remote-panel" id="remote-latest-panel" hidden>
                 <div class="remote-panel-heading"><div><p class="remote-eyebrow">Latest upload</p><h2 id="remote-latest-name">Guest</h2></div><span id="remote-latest-time" class="remote-pill">—</span></div>
                 <img id="remote-latest-image" class="remote-latest-image" alt="Latest guest upload">
