@@ -51,6 +51,8 @@ class EventControlService:
             "moderation_delay_seconds": 10,
             "slideshow_state": "logo",
             "instructions_started_at": "",
+            "instructions_enabled": True,
+            "instructions_skip_cycle": -1,
             "slideshow_command": "",
             "slideshow_command_sequence": 0,
             "slideshow_title": "ARCOBALENO",
@@ -129,6 +131,10 @@ class EventControlService:
                 if mode not in _ALLOWED_EVENT_MODES:
                     raise EventControlError("The event mode is invalid.")
                 payload["event_mode"] = mode
+            if "instructions_enabled" in changes:
+                payload["instructions_enabled"] = bool(changes["instructions_enabled"])
+            if "instructions_skip_cycle" in changes:
+                payload["instructions_skip_cycle"] = int(changes["instructions_skip_cycle"])
             if "guest_downloads_enabled" in changes:
                 payload["guest_downloads_enabled"] = bool(changes["guest_downloads_enabled"])
                 if payload["guest_downloads_enabled"]:
