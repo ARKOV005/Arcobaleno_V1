@@ -50,6 +50,7 @@ class EventControlService:
             "moderation_mode": "family",
             "moderation_delay_seconds": 10,
             "slideshow_state": "logo",
+            "instructions_started_at": "",
             "slideshow_command": "",
             "slideshow_command_sequence": 0,
             "slideshow_title": "ARCOBALENO",
@@ -147,6 +148,8 @@ class EventControlService:
                 if state not in _ALLOWED_SLIDESHOW_STATES:
                     raise EventControlError("The slideshow state is invalid.")
                 payload["slideshow_state"] = state
+                if state == "instructions":
+                    payload["instructions_started_at"] = datetime.now().astimezone().isoformat(timespec="microseconds")
             if "slideshow_title" in changes:
                 payload["slideshow_title"] = self._clean_message(changes["slideshow_title"]) or "ARCOBALENO"
             if "slideshow_message" in changes:
